@@ -8,13 +8,6 @@ from datetime import datetime
 from database import DatabaseManager
 from utils import check_authentication, get_current_user_name
 
-# Page configuration
-st.set_page_config(
-    page_title="Medical History",
-    page_icon="📋",
-    layout="wide"
-)
-
 # Check authentication
 if not check_authentication():
     st.error("Please log in to access this page")

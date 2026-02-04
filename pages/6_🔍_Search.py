@@ -8,13 +8,6 @@ import pandas as pd
 from database import DatabaseManager
 from utils import check_authentication
 
-# Page configuration
-st.set_page_config(
-    page_title="Search Residents",
-    page_icon="🔍",
-    layout="wide"
-)
-
 # Check authentication
 if not check_authentication():
     st.error("Please log in to access this page")
