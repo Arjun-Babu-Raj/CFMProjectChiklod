@@ -20,6 +20,7 @@ A complete, production-ready Streamlit-based health data collection and manageme
 - [Initial Setup](#initial-setup)
 - [Usage Guide](#usage-guide)
 - [Configuration](#configuration)
+- [Database Setup](#database-setup)
 - [Database Schema](#database-schema)
 - [Backup and Maintenance](#backup-and-maintenance)
 - [Troubleshooting](#troubleshooting)
@@ -350,6 +351,98 @@ For Streamlit Cloud deployment, you can use secrets:
 [credentials]
 # Add your config.yaml content here
 ```
+
+---
+
+## 🗄️ Database Setup
+
+The application uses SQLite for data storage. The database is automatically initialized on first run.
+
+### Automatic Initialization
+
+The database (`health_tracking.db`) is created automatically when you first run the application:
+
+```bash
+streamlit run app.py
+# Database is initialized automatically
+```
+
+### Manual Database Setup
+
+If you need to manually initialize or reset the database:
+
+```bash
+# Option 1: Using the setup script (recommended)
+python setup_database.py
+
+# Option 2: Using Python
+python -c "from database import init_database; init_database(); print('Database initialized')"
+
+# Option 3: Using the schema module directly
+python database/schema.py
+```
+
+### Database Location
+
+By default, the database file is created in the application root directory:
+- **File:** `health_tracking.db`
+- **Format:** SQLite3
+- **Size:** Starts at ~8KB, grows with data
+
+### Database Backup
+
+**Automated Backup Scripts:**
+
+```bash
+# Linux/Mac
+./backup_database.sh
+
+# Windows
+backup_database.bat
+```
+
+**Manual Backup:**
+
+```bash
+# Simple copy
+cp health_tracking.db health_tracking_backup_$(date +%Y%m%d).db
+
+# With photos
+tar -czf backup.tar.gz health_tracking.db uploaded_photos/
+```
+
+### Scheduled Backups
+
+**Linux/Mac (Cron):**
+```bash
+# Daily at 2 AM
+crontab -e
+# Add: 0 2 * * * /path/to/backup_database.sh
+```
+
+**Windows (Task Scheduler):**
+- Use `backup_database.bat` with Task Scheduler
+- Schedule daily or weekly
+
+### Database Maintenance
+
+```bash
+# Check integrity
+sqlite3 health_tracking.db "PRAGMA integrity_check;"
+
+# Optimize database (monthly recommended)
+sqlite3 health_tracking.db "VACUUM;"
+
+# View database size
+du -h health_tracking.db
+```
+
+### Advanced Configuration
+
+For detailed database operations, migration, and troubleshooting, see:
+- **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - Complete database guide
+- Includes: backup/restore, migration, performance optimization
+- Covers: troubleshooting, SQL queries, environment-specific setup
 
 ---
 
