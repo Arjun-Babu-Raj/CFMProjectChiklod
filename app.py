@@ -15,20 +15,18 @@ from utils import (
     get_current_user_name
 )
 
-# Page configuration
-st.set_page_config(
-    page_title="Village Health Tracking System",
-    page_icon="🏥",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Initialize database
-init_database()
-
-# Initialize database manager
-if 'db_manager' not in st.session_state:
-    st.session_state.db_manager = DatabaseManager()
+# Page configuration must be first Streamlit command
+# This runs at module level but only once
+try:
+    st.set_page_config(
+        page_title="Village Health Tracking System",
+        page_icon="🏥",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+except Exception:
+    # Ignore if already set (in case of page reloads)
+    pass
 
 
 def show_login():
@@ -160,6 +158,16 @@ def show_home():
 
 def main():
     """Main application logic."""
+    
+    # Initialize database (only once)
+    try:
+        init_database()
+    except Exception as e:
+        st.error(f"Database initialization error: {e}")
+    
+    # Initialize database manager
+    if 'db_manager' not in st.session_state:
+        st.session_state.db_manager = DatabaseManager()
     
     # Sidebar
     with st.sidebar:
