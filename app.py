@@ -163,7 +163,8 @@ def main():
     
     # Sidebar
     with st.sidebar:
-        st.image("https://via.placeholder.com/150x50/FF6B6B/FFFFFF?text=CFM+Chiklod")
+        st.image("https://via.placeholder.com/150x50/FF6B6B/FFFFFF?text=CFM+Chiklod", 
+                 width="stretch")
         st.markdown("---")
         
         # Check authentication
