@@ -38,6 +38,15 @@ config.yaml
 *.sqlite
 *.sqlite3
 
+# Backups (except example backups in documentation)
+backups/*
+!backups/.gitkeep
+*_backup_*.db
+*_backup_*.sql
+*_backup_*.sql.gz
+*.tar.gz
+backup_*.zip
+
 # Uploaded files
 uploaded_photos/*
 !uploaded_photos/.gitkeep
