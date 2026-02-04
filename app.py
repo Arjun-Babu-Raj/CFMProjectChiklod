@@ -24,8 +24,8 @@ try:
         layout="wide",
         initial_sidebar_state="expanded"
     )
-except Exception:
-    # Ignore if already set (in case of page reloads)
+except st.errors.StreamlitAPIException:
+    # Config already set - this is expected in multi-page apps
     pass
 
 
@@ -163,11 +163,18 @@ def main():
     try:
         init_database()
     except Exception as e:
-        st.error(f"Database initialization error: {e}")
+        st.error(f"❌ Database initialization error: {e}")
+        st.error("The application cannot continue without a database. Please contact support.")
+        st.stop()
     
     # Initialize database manager
     if 'db_manager' not in st.session_state:
-        st.session_state.db_manager = DatabaseManager()
+        try:
+            st.session_state.db_manager = DatabaseManager()
+        except Exception as e:
+            st.error(f"❌ Failed to create database manager: {e}")
+            st.error("The application cannot continue. Please contact support.")
+            st.stop()
     
     # Sidebar
     with st.sidebar:
