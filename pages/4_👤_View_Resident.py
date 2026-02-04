@@ -277,7 +277,7 @@ if search_term:
                     cols = st.columns(3)
                     for idx, (label, photo_path) in enumerate(all_photos):
                         with cols[idx % 3]:
-                            st.image(photo_path, caption=label, use_column_width=True)
+                            st.image(photo_path, caption=label)
                 else:
                     st.info("No photos available")
             
