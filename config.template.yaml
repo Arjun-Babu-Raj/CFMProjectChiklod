@@ -1,0 +1,25 @@
+credentials:
+  usernames:
+    worker1:
+      email: worker1@example.com
+      name: Health Worker 1
+      password: $2b$12$BqXmJZVJ6w3dCk0cV9H0YuEzXrJp4X2N8qH5Z1Y2W3V4U5T6R7S8A  # Password: password123
+    worker2:
+      email: worker2@example.com
+      name: Health Worker 2
+      password: $2b$12$BqXmJZVJ6w3dCk0cV9H0YuEzXrJp4X2N8qH5Z1Y2W3V4U5T6R7S8A  # Password: password123
+    worker3:
+      email: worker3@example.com
+      name: Health Worker 3
+      password: $2b$12$BqXmJZVJ6w3dCk0cV9H0YuEzXrJp4X2N8qH5Z1Y2W3V4U5T6R7S8A  # Password: password123
+
+cookie:
+  expiry_days: 30
+  key: random_signature_key_change_this_in_production
+  name: cfm_chiklod_auth
+
+preauthorized:
+  emails:
+  - worker1@example.com
+  - worker2@example.com
+  - worker3@example.com
