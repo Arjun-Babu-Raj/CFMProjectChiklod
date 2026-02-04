@@ -16,13 +16,6 @@ from utils import (
     validate_required_field
 )
 
-# Page configuration
-st.set_page_config(
-    page_title="Register Resident",
-    page_icon="📝",
-    layout="wide"
-)
-
 # Check authentication
 if not check_authentication():
     st.error("Please log in to access this page")

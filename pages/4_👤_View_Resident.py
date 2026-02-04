@@ -10,13 +10,6 @@ import os
 from database import DatabaseManager
 from utils import check_authentication, photo_exists
 
-# Page configuration
-st.set_page_config(
-    page_title="View Resident",
-    page_icon="👤",
-    layout="wide"
-)
-
 # Check authentication
 if not check_authentication():
     st.error("Please log in to access this page")
