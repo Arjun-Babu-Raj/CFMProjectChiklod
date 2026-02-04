@@ -21,21 +21,22 @@ def load_config(config_path: str = "config.yaml") -> dict:
     Returns:
         Configuration dictionary
     """
+    # Helper function to load YAML config
+    def _load_yaml_config(path: str) -> dict:
+        with open(path) as file:
+            return yaml.load(file, Loader=SafeLoader)
+    
     try:
-        with open(config_path) as file:
-            config = yaml.load(file, Loader=SafeLoader)
-        return config
+        return _load_yaml_config(config_path)
     except FileNotFoundError:
         # Try to create config.yaml from template
         template_path = "config.template.yaml"
         if os.path.exists(template_path):
             try:
                 shutil.copy(template_path, config_path)
-                st.success(f"✅ Created '{config_path}' from template. Using default credentials.")
-                st.info("**Default login credentials:**\n- Username: worker1\n- Password: password123")
-                with open(config_path) as file:
-                    config = yaml.load(file, Loader=SafeLoader)
-                return config
+                st.success(f"✅ Created '{config_path}' from template.")
+                st.warning("⚠️ Using default configuration. Please review and update credentials for production use.")
+                return _load_yaml_config(config_path)
             except Exception as e:
                 st.error(f"Failed to create config file from template: {e}")
                 st.stop()
