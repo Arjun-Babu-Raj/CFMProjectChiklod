@@ -38,6 +38,12 @@ def show_login():
     
     # Load config and create authenticator
     config = load_config()
+    
+    # Initialize session state for failed login tracking BEFORE authenticator
+    # This prevents authenticator from trying to write to read-only st.secrets
+    if 'failed_login_attempts' not in st.session_state:
+        st.session_state['failed_login_attempts'] = {}
+    
     authenticator = init_authenticator(config)
     
     # Show login form
@@ -73,7 +79,7 @@ def show_home():
     st.markdown("---")
     
     # Quick stats
-    st.subheader("📊 Quick Statistics")
+    st.subheader("Quick Statistics")
     
     db = st.session_state.db_manager
     
@@ -110,25 +116,25 @@ def show_home():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        if st.button("📝 Register New Resident", use_container_width=True):
+        if st.button("Register New Resident", use_container_width=True):
             st.switch_page("pages/1_📝_Register_Resident.py")
     
     with col2:
-        if st.button("🏥 Record Visit", use_container_width=True):
+        if st.button("Record Visit", use_container_width=True):
             st.switch_page("pages/2_🏥_Record_Visit.py")
     
     with col3:
-        if st.button("🔍 Search Residents", use_container_width=True):
+        if st.button("Search Residents", use_container_width=True):
             st.switch_page("pages/6_🔍_Search.py")
     
     with col4:
-        if st.button("📊 View Analytics", use_container_width=True):
+        if st.button("View Analytics", use_container_width=True):
             st.switch_page("pages/5_📊_Analytics.py")
     
     st.markdown("---")
     
     # Recent activity
-    st.subheader("🕐 Recent Activity")
+    st.subheader("Recent Activity")
     
     recent_visits = db.get_recent_visits(limit=10)
     

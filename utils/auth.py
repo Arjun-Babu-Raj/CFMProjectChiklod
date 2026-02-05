@@ -32,7 +32,6 @@ def load_config(config_path: str = "config.yaml") -> dict:
     # Try to load from Streamlit secrets first (for Cloud deployment)
     try:
         if "credentials" in st.secrets:
-            st.write("DEBUG: Loading from st.secrets")
             config = {
                 "credentials": dict(st.secrets.get("credentials", {})),
                 "cookie": dict(st.secrets.get("cookie", {
@@ -41,12 +40,8 @@ def load_config(config_path: str = "config.yaml") -> dict:
                     "expiry_days": 30
                 }))
             }
-            st.write(f"DEBUG: Config keys: {config.keys()}")
-            st.write(f"DEBUG: Credentials keys: {config['credentials'].keys() if 'credentials' in config else 'MISSING'}")
             return config
     except Exception as e:
-        st.warning(f"⚠️ Could not load from st.secrets: {e}")
-        st.write(f"DEBUG: st.secrets keys: {list(st.secrets.keys())}")
         pass
     
     # Fallback to local config.yaml file
