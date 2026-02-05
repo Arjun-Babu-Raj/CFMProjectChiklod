@@ -39,20 +39,6 @@ def show_login():
     # Load config and create authenticator
     config = load_config()
     
-    # DEBUG: Show what config was loaded
-    with st.expander("🔧 Debug - Config Info"):
-        st.write(f"Config keys: {list(config.keys())}")
-        st.write(f"Credentials type: {type(config.get('credentials'))}")
-        if 'credentials' in config:
-            st.write(f"Credentials keys: {list(config['credentials'].keys())}")
-            if 'usernames' in config['credentials']:
-                st.write(f"Usernames: {list(config['credentials']['usernames'].keys())}")
-                # Show worker1's password hash
-                if 'worker1' in config['credentials']['usernames']:
-                    worker1_data = config['credentials']['usernames']['worker1']
-                    st.write(f"Worker1 password hash: `{worker1_data.get('password', 'MISSING')}`")
-                    st.write(f"Worker1 name: `{worker1_data.get('name', 'MISSING')}`")
-    
     # Initialize session state for failed login tracking BEFORE authenticator
     # This prevents authenticator from trying to write to read-only st.secrets
     if 'failed_login_attempts' not in st.session_state:
