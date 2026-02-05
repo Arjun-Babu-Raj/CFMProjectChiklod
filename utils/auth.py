@@ -12,11 +12,14 @@ import os
 
 def load_config(config_path: str = "config.yaml") -> dict:
     """
-    Load authentication configuration from YAML file.
-    If config.yaml doesn't exist, automatically create it from config.template.yaml.
+    Load authentication configuration from Streamlit secrets or YAML file.
+    Priority: st.secrets > config.yaml > config.template.yaml
+    
+    On Streamlit Cloud, config.yaml won't exist (it's in .gitignore), so this function
+    will load from st.secrets which is where you add credentials in the Streamlit Cloud dashboard.
     
     Args:
-        config_path: Path to config file
+        config_path: Path to config file (used as fallback)
         
     Returns:
         Configuration dictionary
@@ -26,6 +29,27 @@ def load_config(config_path: str = "config.yaml") -> dict:
         with open(path) as file:
             return yaml.load(file, Loader=SafeLoader)
     
+    # Try to load from Streamlit secrets first (for Cloud deployment)
+    try:
+        if "credentials" in st.secrets:
+            st.write("DEBUG: Loading from st.secrets")
+            config = {
+                "credentials": dict(st.secrets.get("credentials", {})),
+                "cookie": dict(st.secrets.get("cookie", {
+                    "name": "cfm_cookie",
+                    "key": "cfm_key",
+                    "expiry_days": 30
+                }))
+            }
+            st.write(f"DEBUG: Config keys: {config.keys()}")
+            st.write(f"DEBUG: Credentials keys: {config['credentials'].keys() if 'credentials' in config else 'MISSING'}")
+            return config
+    except Exception as e:
+        st.warning(f"⚠️ Could not load from st.secrets: {e}")
+        st.write(f"DEBUG: st.secrets keys: {list(st.secrets.keys())}")
+        pass
+    
+    # Fallback to local config.yaml file
     try:
         return _load_yaml_config(config_path)
     except FileNotFoundError:
