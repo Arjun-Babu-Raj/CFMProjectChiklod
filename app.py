@@ -207,4 +207,7 @@ def main():
         show_login()
 
 
+# Note: In Streamlit multi-page apps, the main file should call main() directly
+# at module level (not wrapped in if __name__ == "__main__"). This is required
+# for Streamlit's navigation system to work correctly when switching between pages.
 main()
