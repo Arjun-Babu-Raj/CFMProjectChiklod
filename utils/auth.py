@@ -33,19 +33,38 @@ def load_config(config_path: str = "config.yaml") -> dict:
     # Try to load from Streamlit secrets first (for Cloud deployment)
     try:
         if "credentials" in st.secrets:
-            # Make a DEEP COPY to avoid modifying read-only st.secrets
+            # st.secrets is a special object that needs deep recursive conversion
+            # We need to convert all nested dicts/objects recursively
+            def _convert_secrets_to_dict(obj):
+                """Recursively convert st.secrets objects to regular dicts"""
+                if isinstance(obj, dict):
+                    return {k: _convert_secrets_to_dict(v) for k, v in obj.items()}
+                elif hasattr(obj, '__getitem__') and hasattr(obj, 'keys'):
+                    # It's dict-like (includes Secrets objects)
+                    return {k: _convert_secrets_to_dict(obj[k]) for k in obj.keys()}
+                else:
+                    return obj
+            
+            credentials = _convert_secrets_to_dict(st.secrets["credentials"])
+            cookie = _convert_secrets_to_dict(st.secrets.get("cookie", {
+                "name": "cfm_cookie",
+                "key": "cfm_key",
+                "expiry_days": 30
+            }))
+            
+            # Add preauthorized section if not present
+            preauthorized = _convert_secrets_to_dict(st.secrets.get("preauthorized", {
+                "emails": list(credentials.get("usernames", {}).keys())
+            })) if "preauthorized" in st.secrets else {
+                "emails": []
+            }
+            
             config = {
-                "credentials": copy.deepcopy(dict(st.secrets.get("credentials", {}))),
-                "cookie": copy.deepcopy(dict(st.secrets.get("cookie", {
-                    "name": "cfm_cookie",
-                    "key": "cfm_key",
-                    "expiry_days": 30
-                })))
+                "credentials": credentials,
+                "cookie": cookie,
+                "preauthorized": preauthorized
             }
             return config
-        else:
-            # st.secrets exists but doesn't have 'credentials' key
-            pass
     except Exception as e:
         pass
     
