@@ -8,6 +8,7 @@ from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
 import shutil
 import os
+import copy
 
 
 def load_config(config_path: str = "config.yaml") -> dict:
@@ -32,13 +33,14 @@ def load_config(config_path: str = "config.yaml") -> dict:
     # Try to load from Streamlit secrets first (for Cloud deployment)
     try:
         if "credentials" in st.secrets:
+            # Make a DEEP COPY to avoid modifying read-only st.secrets
             config = {
-                "credentials": dict(st.secrets.get("credentials", {})),
-                "cookie": dict(st.secrets.get("cookie", {
+                "credentials": copy.deepcopy(dict(st.secrets.get("credentials", {}))),
+                "cookie": copy.deepcopy(dict(st.secrets.get("cookie", {
                     "name": "cfm_cookie",
                     "key": "cfm_key",
                     "expiry_days": 30
-                }))
+                })))
             }
             return config
     except Exception as e:
