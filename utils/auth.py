@@ -43,6 +43,9 @@ def load_config(config_path: str = "config.yaml") -> dict:
                 })))
             }
             return config
+        else:
+            # st.secrets exists but doesn't have 'credentials' key
+            pass
     except Exception as e:
         pass
     
