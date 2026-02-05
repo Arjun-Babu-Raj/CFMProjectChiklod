@@ -70,6 +70,8 @@ if search_term:
             
             # Medical history form
             st.subheader("Medical History Details")
+
+            success = False
             
             with st.form("medical_history_form"):
                 chronic_conditions = st.text_area(
@@ -144,7 +146,6 @@ if search_term:
                     
                     # Add or update in database
                     success = db.add_or_update_medical_history(history_data)
-                    
                     if success:
                         st.success("✅ Medical history saved successfully!")
                         
@@ -152,17 +153,18 @@ if search_term:
                             st.info("Medical history has been updated")
                         else:
                             st.info("Medical history has been created")
-                        
-                        # Action buttons
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            if st.button("👤 View Resident Profile", use_container_width=True):
-                                st.switch_page("pages/4_👤_View_Resident.py")
-                        with col2:
-                            if st.button("🏥 Record Visit", use_container_width=True):
-                                st.switch_page("pages/2_🏥_Record_Visit.py")
                     else:
                         st.error("❌ Failed to save medical history. Please try again.")
+
+                # Action buttons (outside form)
+                if submitted and success:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("👤 View Resident Profile", use_container_width=True):
+                            st.switch_page("pages/4_👤_View_Resident.py")
+                    with col2:
+                        if st.button("🏥 Record Visit", use_container_width=True):
+                            st.switch_page("pages/2_🏥_Record_Visit.py")
             
             # Display existing history summary if available
             if existing_history:

@@ -41,11 +41,11 @@ def show_login():
     authenticator = init_authenticator(config)
     
     # Show login form
-    name, authentication_status, username = authenticator.login('Login', 'main')
+    authenticator.login(location='main')
     
-    if authentication_status == False:
+    if st.session_state.get("authentication_status") == False:
         st.error('Username/password is incorrect')
-    elif authentication_status == None:
+    elif st.session_state.get("authentication_status") == None:
         st.warning('Please enter your username and password')
         
         with st.expander("ℹ️ First Time Setup"):
@@ -63,8 +63,8 @@ def show_login():
 
 def show_home():
     """Display home page for authenticated users."""
-    st.title("🏥 Village Health Tracking System")
-    st.subheader("CFM Project Chiklod")
+    st.title("PROJECT CHIKLOD")
+    st.subheader("Department of Community and Family Medicine, AIIMS Bhopal")
     
     # Welcome message
     user_name = get_current_user_name()
@@ -178,8 +178,7 @@ def main():
     
     # Sidebar
     with st.sidebar:
-        st.image("https://via.placeholder.com/150x50/FF6B6B/FFFFFF?text=CFM+Chiklod", 
-                 width="stretch")
+        st.image("assets/cfm_chiklod_logo.svg", use_container_width=True)
         st.markdown("---")
         
         # Check authentication
@@ -189,10 +188,10 @@ def main():
             
             # Logout button
             if st.button("🚪 Logout", use_container_width=True):
-                # Load config and authenticator for logout
-                config = load_config()
-                authenticator = init_authenticator(config)
-                authenticator.logout('Logout', 'sidebar')
+                # Clear authentication state
+                st.session_state['authentication_status'] = None
+                st.session_state['name'] = None
+                st.session_state['username'] = None
                 st.rerun()
             
             st.markdown("---")

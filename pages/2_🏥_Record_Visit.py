@@ -85,6 +85,8 @@ if search_term:
             
             # Visit form
             st.subheader("2️⃣ Record Vitals and Observations")
+
+            success = False
             
             with st.form("visit_form"):
                 # Vitals
@@ -201,17 +203,19 @@ if search_term:
                         if success:
                             st.success("✅ Visit recorded successfully!")
                             st.balloons()
-                            
-                            # Action buttons
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                if st.button("➕ Record Another Visit", use_container_width=True):
-                                    st.rerun()
-                            with col2:
-                                if st.button("👤 View Resident Profile", use_container_width=True):
-                                    st.switch_page("pages/4_👤_View_Resident.py")
                         else:
                             st.error("❌ Failed to record visit. Please try again.")
+            
+            # Action buttons (outside form)
+            if submitted and success:
+                st.markdown("---")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("➕ Record Another Visit", use_container_width=True):
+                        st.rerun()
+                with col2:
+                    if st.button("👤 View Resident Profile", use_container_width=True):
+                        st.switch_page("pages/4_👤_View_Resident.py")
     else:
         st.warning("No residents found matching your search.")
 else:

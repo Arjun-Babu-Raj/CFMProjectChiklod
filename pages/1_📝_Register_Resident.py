@@ -32,6 +32,8 @@ st.title("📝 Register New Resident")
 st.markdown("Fill in the details to register a new village resident")
 st.markdown("---")
 
+success = False
+
 # Registration form
 with st.form("registration_form"):
     st.subheader("Personal Information")
@@ -133,17 +135,18 @@ with st.form("registration_form"):
                         st.write(f"**Village Area:** {village_area if village_area else 'Not provided'}")
                         st.write(f"**Registered by:** {get_current_user_name()}")
                         st.write(f"**Date:** {datetime.now().strftime('%Y-%m-%d')}")
-                
-                # Action buttons
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("➕ Register Another Resident", use_container_width=True):
-                        st.rerun()
-                with col2:
-                    if st.button("👤 View Resident Profile", use_container_width=True):
-                        st.switch_page("pages/4_👤_View_Resident.py")
             else:
                 st.error("❌ Failed to register resident. Please try again.")
+
+# Action buttons (outside the form)
+if submitted and success:
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("➕ Register Another Resident", use_container_width=True):
+            st.rerun()
+    with col2:
+        if st.button("👤 View Resident Profile", use_container_width=True):
+            st.switch_page("pages/4_👤_View_Resident.py")
 
 # Display recent registrations
 st.markdown("---")
