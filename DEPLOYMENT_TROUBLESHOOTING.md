@@ -23,7 +23,7 @@ Ensure all dependencies are properly listed in `requirements.txt`.
 **Solution:**
 - Verify `requirements.txt` is complete and committed
 - Run `pip install -r requirements.txt` locally to verify
-- Run `python3 check_imports.py` to verify all imports work
+- Run the health check: `python3 check_imports.py` (or `./check_imports.py` if executable)
 
 #### 3. **Python Path Issues**
 In some deployment environments, the Python path may not include the project root.
@@ -45,8 +45,10 @@ Sometimes git may not track all necessary files.
 Before deploying, always verify imports work locally:
 
 ```bash
-# Check all imports
+# Check all imports (either way works)
 python3 check_imports.py
+# or if the script is executable:
+./check_imports.py
 
 # Test running the app
 streamlit run app.py

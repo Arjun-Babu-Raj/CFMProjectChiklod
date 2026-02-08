@@ -46,7 +46,7 @@ def check_imports():
     
     for module_name in dependencies:
         try:
-            importlib.import_module(module_name.split('.')[0])
+            importlib.import_module(module_name)
             print(f"  ✓ {module_name}")
         except ImportError as e:
             errors.append(f"{module_name}: {e}")
