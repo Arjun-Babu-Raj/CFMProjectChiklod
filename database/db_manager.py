@@ -3,29 +3,44 @@ Database manager for CRUD operations on residents, visits, and medical history.
 Handles all database interactions with proper error handling and transaction management.
 """
 
-import sqlite3
+import os
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 import pandas as pd
+from supabase import create_client, Client
+import streamlit as st
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 class DatabaseManager:
     """Manages all database operations for the health tracking system."""
     
-    def __init__(self, db_path: str = "health_tracking.db"):
+    def __init__(self):
         """
-        Initialize database manager.
+        Initialize database manager with Supabase client.
+        Credentials are loaded from Streamlit secrets or environment variables.
+        """
+        # Try to get credentials from Streamlit secrets first, then env vars
+        try:
+            supabase_url = st.secrets.get("SUPABASE_URL", os.getenv("SUPABASE_URL"))
+            supabase_key = st.secrets.get("SUPABASE_KEY", os.getenv("SUPABASE_KEY"))
+        except (AttributeError, KeyError):
+            supabase_url = os.getenv("SUPABASE_URL")
+            supabase_key = os.getenv("SUPABASE_KEY")
         
-        Args:
-            db_path: Path to SQLite database file
-        """
-        self.db_path = db_path
+        if not supabase_url or not supabase_key:
+            raise ValueError("Supabase credentials not found. Please set SUPABASE_URL and SUPABASE_KEY.")
+        
+        self.supabase: Client = create_client(supabase_url, supabase_key)
     
-    def _get_connection(self) -> sqlite3.Connection:
-        """Get database connection."""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row  # Enable column access by name
-        return conn
+    def _convert_row_to_dict(self, data) -> Optional[Dict]:
+        """Convert Supabase response to dictionary."""
+        if data and len(data) > 0:
+            return data[0]
+        return None
     
     # ==================== RESIDENTS OPERATIONS ====================
     
@@ -40,28 +55,20 @@ class DatabaseManager:
             True if successful, False otherwise
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
+            data = {
+                'unique_id': resident_data['unique_id'],
+                'name': resident_data['name'],
+                'age': resident_data.get('age'),
+                'gender': resident_data.get('gender'),
+                'address': resident_data.get('address'),
+                'phone': resident_data.get('phone'),
+                'village_area': resident_data.get('village_area'),
+                'photo_path': resident_data.get('photo_path'),
+                'registration_date': resident_data['registration_date'],
+                'registered_by': resident_data['registered_by']
+            }
             
-            cursor.execute("""
-                INSERT INTO residents (unique_id, name, age, gender, address, phone, 
-                                     village_area, photo_path, registration_date, registered_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                resident_data['unique_id'],
-                resident_data['name'],
-                resident_data.get('age'),
-                resident_data.get('gender'),
-                resident_data.get('address'),
-                resident_data.get('phone'),
-                resident_data.get('village_area'),
-                resident_data.get('photo_path'),
-                resident_data['registration_date'],
-                resident_data['registered_by']
-            ))
-            
-            conn.commit()
-            conn.close()
+            self.supabase.table('residents').insert(data).execute()
             return True
         except Exception as e:
             print(f"Error adding resident: {e}")
@@ -78,16 +85,8 @@ class DatabaseManager:
             Dictionary with resident data or None if not found
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute("SELECT * FROM residents WHERE unique_id = ?", (unique_id,))
-            row = cursor.fetchone()
-            conn.close()
-            
-            if row:
-                return dict(row)
-            return None
+            response = self.supabase.table('residents').select('*').eq('unique_id', unique_id).execute()
+            return self._convert_row_to_dict(response.data)
         except Exception as e:
             print(f"Error getting resident: {e}")
             return None
@@ -100,14 +99,8 @@ class DatabaseManager:
             List of dictionaries with resident data
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute("SELECT * FROM residents ORDER BY registration_date DESC")
-            rows = cursor.fetchall()
-            conn.close()
-            
-            return [dict(row) for row in rows]
+            response = self.supabase.table('residents').select('*').order('registration_date', desc=True).execute()
+            return response.data if response.data else []
         except Exception as e:
             print(f"Error getting all residents: {e}")
             return []
@@ -123,20 +116,15 @@ class DatabaseManager:
             List of matching residents
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
+            # Supabase's .ilike operator is parameterized and safe from SQL injection
+            # Basic sanitization: limit length and remove null bytes
+            search_term = search_term[:100].replace('\x00', '')
             
-            search_pattern = f"%{search_term}%"
-            cursor.execute("""
-                SELECT * FROM residents 
-                WHERE name LIKE ? OR unique_id LIKE ?
-                ORDER BY name
-            """, (search_pattern, search_pattern))
-            
-            rows = cursor.fetchall()
-            conn.close()
-            
-            return [dict(row) for row in rows]
+            # Supabase full-text search on name and unique_id
+            response = self.supabase.table('residents').select('*').or_(
+                f'name.ilike.%{search_term}%,unique_id.ilike.%{search_term}%'
+            ).order('name').execute()
+            return response.data if response.data else []
         except Exception as e:
             print(f"Error searching residents: {e}")
             return []
@@ -152,35 +140,22 @@ class DatabaseManager:
             List of matching residents
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            query = "SELECT * FROM residents WHERE 1=1"
-            params = []
+            query = self.supabase.table('residents').select('*')
             
             if filters.get('gender'):
-                query += " AND gender = ?"
-                params.append(filters['gender'])
+                query = query.eq('gender', filters['gender'])
             
             if filters.get('age_min') is not None:
-                query += " AND age >= ?"
-                params.append(filters['age_min'])
+                query = query.gte('age', filters['age_min'])
             
             if filters.get('age_max') is not None:
-                query += " AND age <= ?"
-                params.append(filters['age_max'])
+                query = query.lte('age', filters['age_max'])
             
             if filters.get('village_area'):
-                query += " AND village_area = ?"
-                params.append(filters['village_area'])
+                query = query.eq('village_area', filters['village_area'])
             
-            query += " ORDER BY name"
-            
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            conn.close()
-            
-            return [dict(row) for row in rows]
+            response = query.order('name').execute()
+            return response.data if response.data else []
         except Exception as e:
             print(f"Error filtering residents: {e}")
             return []
@@ -201,12 +176,8 @@ class DatabaseManager:
     def get_resident_count(self) -> int:
         """Get total number of residents."""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM residents")
-            count = cursor.fetchone()[0]
-            conn.close()
-            return count
+            response = self.supabase.table('residents').select('*', count='exact').execute()
+            return response.count if response.count else 0
         except Exception as e:
             print(f"Error getting resident count: {e}")
             return 0
@@ -224,34 +195,25 @@ class DatabaseManager:
             True if successful, False otherwise
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
+            data = {
+                'resident_id': visit_data['resident_id'],
+                'visit_date': visit_data['visit_date'],
+                'visit_time': visit_data['visit_time'],
+                'health_worker': visit_data['health_worker'],
+                'bp_systolic': visit_data.get('bp_systolic'),
+                'bp_diastolic': visit_data.get('bp_diastolic'),
+                'temperature': visit_data.get('temperature'),
+                'pulse': visit_data.get('pulse'),
+                'weight': visit_data.get('weight'),
+                'height': visit_data.get('height'),
+                'bmi': visit_data.get('bmi'),
+                'spo2': visit_data.get('spo2'),
+                'complaints': visit_data.get('complaints'),
+                'observations': visit_data.get('observations'),
+                'photo_paths': visit_data.get('photo_paths')
+            }
             
-            cursor.execute("""
-                INSERT INTO visits (resident_id, visit_date, visit_time, health_worker,
-                                  bp_systolic, bp_diastolic, temperature, pulse,
-                                  weight, height, bmi, spo2, complaints, observations, photo_paths)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                visit_data['resident_id'],
-                visit_data['visit_date'],
-                visit_data['visit_time'],
-                visit_data['health_worker'],
-                visit_data.get('bp_systolic'),
-                visit_data.get('bp_diastolic'),
-                visit_data.get('temperature'),
-                visit_data.get('pulse'),
-                visit_data.get('weight'),
-                visit_data.get('height'),
-                visit_data.get('bmi'),
-                visit_data.get('spo2'),
-                visit_data.get('complaints'),
-                visit_data.get('observations'),
-                visit_data.get('photo_paths')
-            ))
-            
-            conn.commit()
-            conn.close()
+            self.supabase.table('visits').insert(data).execute()
             return True
         except Exception as e:
             print(f"Error adding visit: {e}")
@@ -268,19 +230,10 @@ class DatabaseManager:
             List of visit records
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                SELECT * FROM visits 
-                WHERE resident_id = ?
-                ORDER BY visit_date DESC, visit_time DESC
-            """, (resident_id,))
-            
-            rows = cursor.fetchall()
-            conn.close()
-            
-            return [dict(row) for row in rows]
+            response = self.supabase.table('visits').select('*').eq(
+                'resident_id', resident_id
+            ).order('visit_date', desc=True).order('visit_time', desc=True).execute()
+            return response.data if response.data else []
         except Exception as e:
             print(f"Error getting resident visits: {e}")
             return []
@@ -288,12 +241,10 @@ class DatabaseManager:
     def get_all_visits(self) -> List[Dict]:
         """Get all visits."""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM visits ORDER BY visit_date DESC, visit_time DESC")
-            rows = cursor.fetchall()
-            conn.close()
-            return [dict(row) for row in rows]
+            response = self.supabase.table('visits').select('*').order(
+                'visit_date', desc=True
+            ).order('visit_time', desc=True).execute()
+            return response.data if response.data else []
         except Exception as e:
             print(f"Error getting all visits: {e}")
             return []
@@ -301,12 +252,8 @@ class DatabaseManager:
     def get_visit_count(self) -> int:
         """Get total number of visits."""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM visits")
-            count = cursor.fetchone()[0]
-            conn.close()
-            return count
+            response = self.supabase.table('visits').select('*', count='exact').execute()
+            return response.count if response.count else 0
         except Exception as e:
             print(f"Error getting visit count: {e}")
             return 0
@@ -319,17 +266,19 @@ class DatabaseManager:
             List of tuples (health_worker, count)
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT health_worker, COUNT(*) as count
-                FROM visits
-                GROUP BY health_worker
-                ORDER BY count DESC
-            """)
-            rows = cursor.fetchall()
-            conn.close()
-            return [(row[0], row[1]) for row in rows]
+            # Supabase doesn't have native GROUP BY in select, so we fetch all and process
+            response = self.supabase.table('visits').select('health_worker').execute()
+            if not response.data:
+                return []
+            
+            # Count occurrences manually
+            counts = {}
+            for visit in response.data:
+                worker = visit.get('health_worker', 'Unknown')
+                counts[worker] = counts.get(worker, 0) + 1
+            
+            # Sort by count descending
+            return sorted(counts.items(), key=lambda x: x[1], reverse=True)
         except Exception as e:
             print(f"Error getting visits by health worker: {e}")
             return []
@@ -345,21 +294,31 @@ class DatabaseManager:
             List of recent visit records
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT v.*, r.name as resident_name
-                FROM visits v
-                JOIN residents r ON v.resident_id = r.unique_id
-                ORDER BY v.visit_date DESC, v.visit_time DESC
-                LIMIT ?
-            """, (limit,))
-            rows = cursor.fetchall()
-            conn.close()
-            return [dict(row) for row in rows]
+            # Get visits with JOIN-like behavior (we'll fetch separately and merge)
+            # Note: The foreign key reference 'visits_resident_id_fkey' follows Supabase's
+            # default naming convention. If your FK has a custom name, update this.
+            response = self.supabase.table('visits').select(
+                '*, residents!visits_resident_id_fkey(name)'
+            ).order('visit_date', desc=True).order('visit_time', desc=True).limit(limit).execute()
+            
+            if response.data:
+                # Flatten the nested resident data
+                for visit in response.data:
+                    if 'residents' in visit and visit['residents']:
+                        visit['resident_name'] = visit['residents']['name']
+                        del visit['residents']
+                return response.data
+            return []
         except Exception as e:
             print(f"Error getting recent visits: {e}")
-            return []
+            # Fallback: fetch without join if FK reference fails
+            try:
+                response = self.supabase.table('visits').select('*').order(
+                    'visit_date', desc=True
+                ).order('visit_time', desc=True).limit(limit).execute()
+                return response.data if response.data else []
+            except:
+                return []
     
     # ==================== MEDICAL HISTORY OPERATIONS ====================
     
@@ -374,54 +333,32 @@ class DatabaseManager:
             True if successful, False otherwise
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
             # Check if history already exists
-            cursor.execute("SELECT history_id FROM medical_history WHERE resident_id = ?",
-                         (history_data['resident_id'],))
-            existing = cursor.fetchone()
+            response = self.supabase.table('medical_history').select('history_id').eq(
+                'resident_id', history_data['resident_id']
+            ).execute()
             
-            if existing:
+            data = {
+                'chronic_conditions': history_data.get('chronic_conditions'),
+                'past_diagnoses': history_data.get('past_diagnoses'),
+                'current_medications': history_data.get('current_medications'),
+                'allergies': history_data.get('allergies'),
+                'family_history': history_data.get('family_history'),
+                'notes': history_data.get('notes'),
+                'last_updated': history_data['last_updated'],
+                'updated_by': history_data['updated_by']
+            }
+            
+            if response.data and len(response.data) > 0:
                 # Update existing record
-                cursor.execute("""
-                    UPDATE medical_history
-                    SET chronic_conditions = ?, past_diagnoses = ?, current_medications = ?,
-                        allergies = ?, family_history = ?, notes = ?, 
-                        last_updated = ?, updated_by = ?
-                    WHERE resident_id = ?
-                """, (
-                    history_data.get('chronic_conditions'),
-                    history_data.get('past_diagnoses'),
-                    history_data.get('current_medications'),
-                    history_data.get('allergies'),
-                    history_data.get('family_history'),
-                    history_data.get('notes'),
-                    history_data['last_updated'],
-                    history_data['updated_by'],
-                    history_data['resident_id']
-                ))
+                self.supabase.table('medical_history').update(data).eq(
+                    'resident_id', history_data['resident_id']
+                ).execute()
             else:
                 # Insert new record
-                cursor.execute("""
-                    INSERT INTO medical_history (resident_id, chronic_conditions, past_diagnoses,
-                                               current_medications, allergies, family_history,
-                                               notes, last_updated, updated_by)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    history_data['resident_id'],
-                    history_data.get('chronic_conditions'),
-                    history_data.get('past_diagnoses'),
-                    history_data.get('current_medications'),
-                    history_data.get('allergies'),
-                    history_data.get('family_history'),
-                    history_data.get('notes'),
-                    history_data['last_updated'],
-                    history_data['updated_by']
-                ))
+                data['resident_id'] = history_data['resident_id']
+                self.supabase.table('medical_history').insert(data).execute()
             
-            conn.commit()
-            conn.close()
             return True
         except Exception as e:
             print(f"Error adding/updating medical history: {e}")
@@ -438,16 +375,10 @@ class DatabaseManager:
             Dictionary with medical history or None if not found
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
-            cursor.execute("SELECT * FROM medical_history WHERE resident_id = ?", (resident_id,))
-            row = cursor.fetchone()
-            conn.close()
-            
-            if row:
-                return dict(row)
-            return None
+            response = self.supabase.table('medical_history').select('*').eq(
+                'resident_id', resident_id
+            ).execute()
+            return self._convert_row_to_dict(response.data)
         except Exception as e:
             print(f"Error getting medical history: {e}")
             return None
@@ -462,35 +393,36 @@ class DatabaseManager:
             Dictionary with demographic statistics
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            
             # Gender distribution
-            cursor.execute("""
-                SELECT gender, COUNT(*) as count
-                FROM residents
-                WHERE gender IS NOT NULL
-                GROUP BY gender
-            """)
-            gender_dist = {row[0]: row[1] for row in cursor.fetchall()}
+            response = self.supabase.table('residents').select('gender').neq('gender', None).execute()
+            gender_dist = {}
+            if response.data:
+                for row in response.data:
+                    gender = row.get('gender', 'Unknown')
+                    if gender:  # Additional check for empty strings
+                        gender_dist[gender] = gender_dist.get(gender, 0) + 1
             
-            # Age groups
-            cursor.execute("""
-                SELECT 
-                    CASE 
-                        WHEN age < 18 THEN 'Child (0-17)'
-                        WHEN age >= 18 AND age < 40 THEN 'Adult (18-39)'
-                        WHEN age >= 40 AND age < 60 THEN 'Middle Age (40-59)'
-                        ELSE 'Senior (60+)'
-                    END as age_group,
-                    COUNT(*) as count
-                FROM residents
-                WHERE age IS NOT NULL
-                GROUP BY age_group
-            """)
-            age_groups = {row[0]: row[1] for row in cursor.fetchall()}
+            # Age groups - fetch all ages and categorize
+            response = self.supabase.table('residents').select('age').neq('age', None).execute()
+            age_groups = {
+                'Child (0-17)': 0,
+                'Adult (18-39)': 0,
+                'Middle Age (40-59)': 0,
+                'Senior (60+)': 0
+            }
             
-            conn.close()
+            if response.data:
+                for row in response.data:
+                    age = row.get('age')
+                    if age is not None:
+                        if age < 18:
+                            age_groups['Child (0-17)'] += 1
+                        elif 18 <= age < 40:
+                            age_groups['Adult (18-39)'] += 1
+                        elif 40 <= age < 60:
+                            age_groups['Middle Age (40-59)'] += 1
+                        else:
+                            age_groups['Senior (60+)'] += 1
             
             return {
                 'gender_distribution': gender_dist,
@@ -508,34 +440,36 @@ class DatabaseManager:
             Dictionary with monthly trends
         """
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
+            # Monthly registrations - fetch all dates and process
+            response = self.supabase.table('residents').select('registration_date').neq(
+                'registration_date', None
+            ).execute()
             
-            # Monthly registrations
-            cursor.execute("""
-                SELECT strftime('%Y-%m', registration_date) as month, COUNT(*) as count
-                FROM residents
-                WHERE registration_date IS NOT NULL
-                GROUP BY month
-                ORDER BY month
-            """)
-            registrations = {row[0]: row[1] for row in cursor.fetchall()}
+            registrations = {}
+            if response.data:
+                for row in response.data:
+                    date_str = row.get('registration_date', '')
+                    if date_str:
+                        # Extract year-month (format: YYYY-MM)
+                        month = date_str[:7]
+                        registrations[month] = registrations.get(month, 0) + 1
             
-            # Monthly visits
-            cursor.execute("""
-                SELECT strftime('%Y-%m', visit_date) as month, COUNT(*) as count
-                FROM visits
-                WHERE visit_date IS NOT NULL
-                GROUP BY month
-                ORDER BY month
-            """)
-            visits = {row[0]: row[1] for row in cursor.fetchall()}
+            # Monthly visits - fetch all dates and process
+            response = self.supabase.table('visits').select('visit_date').neq(
+                'visit_date', None
+            ).execute()
             
-            conn.close()
+            visits = {}
+            if response.data:
+                for row in response.data:
+                    date_str = row.get('visit_date', '')
+                    if date_str:
+                        month = date_str[:7]
+                        visits[month] = visits.get(month, 0) + 1
             
             return {
-                'monthly_registrations': registrations,
-                'monthly_visits': visits
+                'monthly_registrations': dict(sorted(registrations.items())),
+                'monthly_visits': dict(sorted(visits.items()))
             }
         except Exception as e:
             print(f"Error getting monthly trends: {e}")
@@ -567,13 +501,179 @@ class DatabaseManager:
     def export_medical_history_to_df(self) -> pd.DataFrame:
         """Export all medical histories to pandas DataFrame."""
         try:
-            conn = self._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM medical_history")
-            rows = cursor.fetchall()
-            conn.close()
-            histories = [dict(row) for row in rows]
+            response = self.supabase.table('medical_history').select('*').execute()
+            histories = response.data if response.data else []
             return pd.DataFrame(histories)
         except Exception as e:
             print(f"Error exporting medical history: {e}")
             return pd.DataFrame()
+    
+    # ==================== NEW HEALTH MODULES OPERATIONS ====================
+    
+    def add_growth_monitoring(self, growth_data: Dict) -> bool:
+        """Add growth monitoring record for a child."""
+        try:
+            self.supabase.table('growth_monitoring').insert(growth_data).execute()
+            return True
+        except Exception as e:
+            print(f"Error adding growth monitoring: {e}")
+            return False
+    
+    def get_child_growth_records(self, resident_id: str) -> List[Dict]:
+        """Get all growth records for a child."""
+        try:
+            response = self.supabase.table('growth_monitoring').select('*').eq(
+                'resident_id', resident_id
+            ).order('record_date', desc=True).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting growth records: {e}")
+            return []
+    
+    def add_maternal_health_record(self, maternal_data: Dict) -> bool:
+        """Add maternal health (ANC/PNC) record."""
+        try:
+            self.supabase.table('maternal_health').insert(maternal_data).execute()
+            return True
+        except Exception as e:
+            print(f"Error adding maternal health record: {e}")
+            return False
+    
+    def get_maternal_health_records(self, resident_id: str) -> List[Dict]:
+        """Get all maternal health records for a resident."""
+        try:
+            response = self.supabase.table('maternal_health').select('*').eq(
+                'resident_id', resident_id
+            ).order('visit_date', desc=True).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting maternal health records: {e}")
+            return []
+    
+    def get_high_risk_mothers(self) -> List[Dict]:
+        """Get list of high-risk mothers (high BP or low Hb)."""
+        try:
+            # Get recent ANC records with danger signs or abnormal vitals
+            # Note: The foreign key reference 'maternal_health_resident_id_fkey' follows
+            # Supabase's default naming convention. If your FK has a custom name, update this.
+            response = self.supabase.table('maternal_health').select(
+                '*, residents!maternal_health_resident_id_fkey(name, unique_id)'
+            ).eq('visit_type', 'ANC').order('visit_date', desc=True).execute()
+            
+            high_risk = []
+            seen_residents = set()
+            
+            if response.data:
+                for record in response.data:
+                    resident_id = record.get('resident_id')
+                    if resident_id in seen_residents:
+                        continue
+                    
+                    # Check for high risk factors
+                    bp_systolic = record.get('bp_systolic', 0) or 0
+                    hemoglobin = record.get('hemoglobin', 100) or 100
+                    danger_signs = record.get('danger_signs', '')
+                    
+                    if bp_systolic >= 140 or hemoglobin < 11 or danger_signs:
+                        seen_residents.add(resident_id)
+                        # Flatten nested resident data
+                        if 'residents' in record and record['residents']:
+                            record['resident_name'] = record['residents']['name']
+                            del record['residents']
+                        high_risk.append(record)
+            
+            return high_risk
+        except Exception as e:
+            print(f"Error getting high risk mothers: {e}")
+            # Fallback: fetch without join if FK reference fails
+            try:
+                response = self.supabase.table('maternal_health').select('*').eq(
+                    'visit_type', 'ANC'
+                ).order('visit_date', desc=True).execute()
+                
+                high_risk = []
+                seen_residents = set()
+                
+                if response.data:
+                    for record in response.data:
+                        resident_id = record.get('resident_id')
+                        if resident_id in seen_residents:
+                            continue
+                        
+                        bp_systolic = record.get('bp_systolic', 0) or 0
+                        hemoglobin = record.get('hemoglobin', 100) or 100
+                        danger_signs = record.get('danger_signs', '')
+                        
+                        if bp_systolic >= 140 or hemoglobin < 11 or danger_signs:
+                            seen_residents.add(resident_id)
+                            # Get resident name separately
+                            resident = self.get_resident(resident_id)
+                            if resident:
+                                record['resident_name'] = resident['name']
+                            high_risk.append(record)
+                
+                return high_risk
+            except:
+                return []
+    
+    def add_ncd_followup(self, ncd_data: Dict) -> bool:
+        """Add NCD followup record."""
+        try:
+            self.supabase.table('ncd_followup').insert(ncd_data).execute()
+            return True
+        except Exception as e:
+            print(f"Error adding NCD followup: {e}")
+            return False
+    
+    def get_ncd_followup_records(self, resident_id: str) -> List[Dict]:
+        """Get all NCD followup records for a resident."""
+        try:
+            response = self.supabase.table('ncd_followup').select('*').eq(
+                'resident_id', resident_id
+            ).order('checkup_date', desc=True).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting NCD followup records: {e}")
+            return []
+    
+    def get_ncd_due_list(self, days_threshold: int = 30) -> List[Dict]:
+        """Get patients who haven't visited in specified days."""
+        try:
+            from datetime import datetime, timedelta
+            
+            cutoff_date = (datetime.now() - timedelta(days=days_threshold)).strftime('%Y-%m-%d')
+            
+            # Get all NCD patients with their last visit
+            response = self.supabase.table('ncd_followup').select(
+                'resident_id, checkup_date, condition_type'
+            ).order('checkup_date', desc=True).execute()
+            
+            if not response.data:
+                return []
+            
+            # Group by resident and find last visit
+            last_visits = {}
+            for record in response.data:
+                resident_id = record['resident_id']
+                if resident_id not in last_visits:
+                    last_visits[resident_id] = record
+            
+            # Filter those overdue
+            due_list = []
+            for resident_id, record in last_visits.items():
+                if record['checkup_date'] < cutoff_date:
+                    # Get resident details
+                    resident = self.get_resident(resident_id)
+                    if resident:
+                        due_list.append({
+                            **record,
+                            'resident_name': resident['name'],
+                            'days_overdue': (datetime.now() - datetime.strptime(
+                                record['checkup_date'], '%Y-%m-%d'
+                            )).days
+                        })
+            
+            return sorted(due_list, key=lambda x: x['days_overdue'], reverse=True)
+        except Exception as e:
+            print(f"Error getting NCD due list: {e}")
+            return []

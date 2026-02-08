@@ -37,6 +37,7 @@ config.yaml
 *.db
 *.sqlite
 *.sqlite3
+.env
 
 # Backups (except example backups in documentation)
 backups/*
