@@ -14,6 +14,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Clinical thresholds and constants
+MALNUTRITION_Z_SCORE_THRESHOLD = -2  # WHO standard for malnutrition
+PREGNANCY_DURATION_DAYS = 280  # Approximate duration of pregnancy
+HYPERTENSION_THRESHOLD_SYSTOLIC = 140  # Systolic BP threshold for hypertension (mmHg)
+
 
 class DatabaseManager:
     """Manages all database operations for the health tracking system."""
@@ -760,7 +765,7 @@ class DatabaseManager:
                     seen_residents.add(resident_id)
                     z_score = record.get('z_score_weight_age', 0)
                     if z_score is not None:
-                        if z_score < -2:
+                        if z_score < MALNUTRITION_Z_SCORE_THRESHOLD:
                             nutritional_status['Malnourished'] += 1
                         else:
                             nutritional_status['Normal'] += 1
@@ -801,7 +806,7 @@ class DatabaseManager:
                         from datetime import datetime, timedelta
                         try:
                             edd = datetime.strptime(edd_date, '%Y-%m-%d')
-                            if edd >= datetime.now() - timedelta(days=280):
+                            if edd >= datetime.now() - timedelta(days=PREGNANCY_DURATION_DAYS):
                                 active_pregnancies.add(record.get('resident_id'))
                         except:
                             pass
@@ -857,7 +862,7 @@ class DatabaseManager:
                         monthly_uncontrolled_bp[month] = 0
                     
                     # Count if BP is uncontrolled (>140 systolic)
-                    if bp_systolic > 140:
+                    if bp_systolic > HYPERTENSION_THRESHOLD_SYSTOLIC:
                         monthly_uncontrolled_bp[month] += 1
             
             return {
