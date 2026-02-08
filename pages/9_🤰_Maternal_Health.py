@@ -7,7 +7,7 @@ import streamlit as st
 from datetime import datetime, date, timedelta
 import uuid
 from database import DatabaseManager
-from utils import check_authentication, get_current_user_name
+from utils import check_authentication, get_current_user_name, select_resident_widget
 
 # Check authentication
 if not check_authentication():
@@ -46,28 +46,22 @@ def calculate_gestational_age(lmp_date, visit_date):
 # Mother Selection
 st.subheader("Select Mother")
 
-# Filter female residents (typical age range for pregnancy)
-filters = {'gender': 'Female', 'age_min': 15, 'age_max': 45}
-mothers = db.filter_residents(filters)
-
-if not mothers:
-    st.warning("No female residents in the reproductive age group found.")
-    st.info("Register residents first in the 'Register Resident' page.")
-    st.stop()
-
-# Create selection dropdown
-mother_options = {f"{mother['name']} ({mother['unique_id']}) - Age: {mother.get('age', 'N/A')}": mother['unique_id'] 
-                  for mother in mothers}
-
-selected_display = st.selectbox("Choose a mother:", list(mother_options.keys()))
-selected_mother_id = mother_options[selected_display]
-
-# Get selected mother details
-selected_mother = db.get_resident(selected_mother_id)
+# Use the new search-to-select widget for mothers
+selected_mother = select_resident_widget(db, key_prefix="maternal_health")
 
 if not selected_mother:
-    st.error("Mother not found!")
+    st.info("Search for a female resident (age 15-45) to manage maternal health records.")
     st.stop()
+
+# Validate gender and age
+if selected_mother.get('gender') != 'Female':
+    st.warning(f"⚠️ {selected_mother['name']} is not female. Please select a female resident.")
+    st.stop()
+
+age = selected_mother.get('age')
+if age is not None and (age < 15 or age > 45):
+    st.warning(f"⚠️ {selected_mother['name']} is not in the typical reproductive age range (15-45 years). You can still proceed, but this is outside the normal range.")
+
 
 # Display mother info
 col1, col2, col3 = st.columns(3)
@@ -146,7 +140,7 @@ with tab1:
                 st.error("LMP date is required for ANC records")
             else:
                 anc_data = {
-                    'resident_id': selected_mother_id,
+                    'resident_id': selected_mother['unique_id'],
                     'pregnancy_id': pregnancy_id,
                     'visit_type': 'ANC',
                     'visit_date': visit_date.strftime('%Y-%m-%d'),
@@ -185,7 +179,7 @@ with tab1:
     st.markdown("---")
     st.subheader("ANC Visit History")
     
-    maternal_records = db.get_maternal_health_records(selected_mother_id)
+    maternal_records = db.get_maternal_health_records(selected_mother['unique_id'])
     anc_records = [r for r in maternal_records if r.get('visit_type') == 'ANC']
     
     if anc_records:
@@ -250,7 +244,7 @@ with tab2:
                 st.error("Delivery date is required for PNC records")
             else:
                 pnc_data = {
-                    'resident_id': selected_mother_id,
+                    'resident_id': selected_mother['unique_id'],
                     'pregnancy_id': pregnancy_id_pnc if pregnancy_id_pnc else f"PNC-{uuid.uuid4().hex[:8].upper()}",
                     'visit_type': 'PNC',
                     'visit_date': visit_date_pnc.strftime('%Y-%m-%d'),
@@ -289,7 +283,7 @@ with tab2:
     st.markdown("---")
     st.subheader("PNC Visit History")
     
-    maternal_records = db.get_maternal_health_records(selected_mother_id)
+    maternal_records = db.get_maternal_health_records(selected_mother['unique_id'])
     pnc_records = [r for r in maternal_records if r.get('visit_type') == 'PNC']
     
     if pnc_records:

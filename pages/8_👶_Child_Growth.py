@@ -8,7 +8,7 @@ from datetime import datetime, date
 import plotly.graph_objects as go
 import pandas as pd
 from database import DatabaseManager
-from utils import check_authentication, get_current_user_name
+from utils import check_authentication, get_current_user_name, select_resident_widget
 
 # Check authentication
 if not check_authentication():
@@ -96,27 +96,16 @@ def calculate_z_score_simple(value, age_months, gender, metric='weight'):
 # Child Selection
 st.subheader("Select Child")
 
-# Filter residents under 5 years
-filters = {'age_min': 0, 'age_max': 5}
-children = db.filter_residents(filters)
-
-if not children:
-    st.warning("No children under 5 years found in the database.")
-    st.info("Register children first in the 'Register Resident' page.")
-    st.stop()
-
-# Create selection dropdown
-child_options = {f"{child['name']} ({child['unique_id']}) - Age: {child.get('age', 'N/A')}": child['unique_id'] 
-                 for child in children}
-
-selected_display = st.selectbox("Choose a child:", list(child_options.keys()))
-selected_child_id = child_options[selected_display]
-
-# Get selected child details
-selected_child = db.get_resident(selected_child_id)
+# Use the new search-to-select widget for children
+selected_child = select_resident_widget(db, key_prefix="child_growth")
 
 if not selected_child:
-    st.error("Child not found!")
+    st.info("Search for a child (under 5 years) to start tracking growth.")
+    st.stop()
+
+# Validate age
+if selected_child.get('age') is None or selected_child.get('age') > 5:
+    st.warning(f"⚠️ {selected_child['name']} is not in the child age group (under 5 years). Please select a different resident.")
     st.stop()
 
 # Display child info
@@ -164,7 +153,7 @@ with tab1:
                 )
                 
                 growth_data = {
-                    'resident_id': selected_child_id,
+                    'resident_id': selected_child['unique_id'],
                     'record_date': record_date.strftime('%Y-%m-%d'),
                     'age_months': age_months,
                     'weight_kg': weight_kg,
@@ -200,7 +189,7 @@ with tab2:
     st.subheader("Growth Charts & History")
     
     # Get growth history
-    growth_records = db.get_child_growth_records(selected_child_id)
+    growth_records = db.get_child_growth_records(selected_child['unique_id'])
     
     if not growth_records:
         st.info("No growth records found for this child. Add measurements in the 'Record Growth Data' tab.")
