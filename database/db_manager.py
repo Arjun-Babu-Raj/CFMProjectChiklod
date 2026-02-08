@@ -14,6 +14,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Clinical thresholds and constants
+MALNUTRITION_Z_SCORE_THRESHOLD = -2  # WHO standard for malnutrition
+PREGNANCY_DURATION_DAYS = 280  # Approximate duration of pregnancy
+HYPERTENSION_THRESHOLD_SYSTOLIC = 140  # Systolic BP threshold for hypertension (mmHg)
+
 
 class DatabaseManager:
     """Manages all database operations for the health tracking system."""
@@ -508,6 +513,57 @@ class DatabaseManager:
             print(f"Error exporting medical history: {e}")
             return pd.DataFrame()
     
+    def export_growth_data(self) -> pd.DataFrame:
+        """
+        Export all growth monitoring data to pandas DataFrame.
+        
+        Returns:
+            DataFrame with growth monitoring data including resident_id
+        """
+        try:
+            response = self.supabase.table('growth_monitoring').select('*').order(
+                'record_date', desc=True
+            ).execute()
+            growth_data = response.data if response.data else []
+            return pd.DataFrame(growth_data)
+        except Exception as e:
+            print(f"Error exporting growth data: {e}")
+            return pd.DataFrame()
+    
+    def export_maternal_data(self) -> pd.DataFrame:
+        """
+        Export all maternal health data to pandas DataFrame.
+        
+        Returns:
+            DataFrame with maternal health data including resident_id
+        """
+        try:
+            response = self.supabase.table('maternal_health').select('*').order(
+                'visit_date', desc=True
+            ).execute()
+            maternal_data = response.data if response.data else []
+            return pd.DataFrame(maternal_data)
+        except Exception as e:
+            print(f"Error exporting maternal health data: {e}")
+            return pd.DataFrame()
+    
+    def export_ncd_data(self) -> pd.DataFrame:
+        """
+        Export all NCD followup data to pandas DataFrame.
+        
+        Returns:
+            DataFrame with NCD followup data including resident_id
+        """
+        try:
+            response = self.supabase.table('ncd_followup').select('*').order(
+                'checkup_date', desc=True
+            ).execute()
+            ncd_data = response.data if response.data else []
+            return pd.DataFrame(ncd_data)
+        except Exception as e:
+            print(f"Error exporting NCD followup data: {e}")
+            return pd.DataFrame()
+    
     # ==================== NEW HEALTH MODULES OPERATIONS ====================
     
     def add_growth_monitoring(self, growth_data: Dict) -> bool:
@@ -677,3 +733,142 @@ class DatabaseManager:
         except Exception as e:
             print(f"Error getting NCD due list: {e}")
             return []
+    
+    # ==================== NEW MODULE ANALYTICS ====================
+    
+    def get_child_health_analytics(self) -> Dict:
+        """
+        Get analytics data for child health.
+        
+        Returns:
+            Dictionary with child health statistics
+        """
+        try:
+            # Get children under 5 years
+            children = self.filter_residents({'age_min': 0, 'age_max': 5})
+            total_children = len(children)
+            
+            # Get all growth records with latest z-scores
+            response = self.supabase.table('growth_monitoring').select('*').order(
+                'record_date', desc=True
+            ).execute()
+            
+            growth_records = response.data if response.data else []
+            
+            # Calculate nutritional status distribution
+            nutritional_status = {'Normal': 0, 'Malnourished': 0}
+            seen_residents = set()
+            
+            for record in growth_records:
+                resident_id = record.get('resident_id')
+                if resident_id not in seen_residents:
+                    seen_residents.add(resident_id)
+                    z_score = record.get('z_score_weight_age', 0)
+                    if z_score is not None:
+                        if z_score < MALNUTRITION_Z_SCORE_THRESHOLD:
+                            nutritional_status['Malnourished'] += 1
+                        else:
+                            nutritional_status['Normal'] += 1
+            
+            return {
+                'total_children': total_children,
+                'nutritional_status': nutritional_status,
+                'children_with_records': len(seen_residents)
+            }
+        except Exception as e:
+            print(f"Error getting child health analytics: {e}")
+            return {'total_children': 0, 'nutritional_status': {}, 'children_with_records': 0}
+    
+    def get_maternal_health_analytics(self) -> Dict:
+        """
+        Get analytics data for maternal health.
+        
+        Returns:
+            Dictionary with maternal health statistics
+        """
+        try:
+            # Get all maternal health records
+            response = self.supabase.table('maternal_health').select('*').execute()
+            maternal_records = response.data if response.data else []
+            
+            # Count active pregnancies (recent ANC visits)
+            active_pregnancies = set()
+            anc_visits = 0
+            pnc_visits = 0
+            
+            for record in maternal_records:
+                visit_type = record.get('visit_type', '')
+                if visit_type == 'ANC':
+                    anc_visits += 1
+                    # Consider pregnancy active if EDD is in the future or within last 9 months
+                    edd_date = record.get('edd_date')
+                    if edd_date:
+                        from datetime import datetime, timedelta
+                        try:
+                            edd = datetime.strptime(edd_date, '%Y-%m-%d')
+                            if edd >= datetime.now() - timedelta(days=PREGNANCY_DURATION_DAYS):
+                                active_pregnancies.add(record.get('resident_id'))
+                        except:
+                            pass
+                elif visit_type == 'PNC':
+                    pnc_visits += 1
+            
+            # Count high-risk mothers
+            high_risk_mothers = self.get_high_risk_mothers()
+            
+            return {
+                'active_pregnancies': len(active_pregnancies),
+                'high_risk_count': len(high_risk_mothers),
+                'anc_visits': anc_visits,
+                'pnc_visits': pnc_visits
+            }
+        except Exception as e:
+            print(f"Error getting maternal health analytics: {e}")
+            return {'active_pregnancies': 0, 'high_risk_count': 0, 'anc_visits': 0, 'pnc_visits': 0}
+    
+    def get_ncd_analytics(self) -> Dict:
+        """
+        Get analytics data for NCD control.
+        
+        Returns:
+            Dictionary with NCD statistics and trend data
+        """
+        try:
+            # Get all NCD records
+            response = self.supabase.table('ncd_followup').select('*').order(
+                'checkup_date', desc=True
+            ).execute()
+            ncd_records = response.data if response.data else []
+            
+            # Count unique NCD patients
+            unique_patients = set()
+            for record in ncd_records:
+                unique_patients.add(record.get('resident_id'))
+            
+            # Calculate uncontrolled BP trend over last 6 months
+            from datetime import datetime, timedelta
+            six_months_ago = (datetime.now() - timedelta(days=180)).strftime('%Y-%m-%d')
+            
+            monthly_uncontrolled_bp = {}
+            for record in ncd_records:
+                checkup_date = record.get('checkup_date', '')
+                if checkup_date >= six_months_ago:
+                    bp_systolic = record.get('bp_systolic', 0) or 0
+                    
+                    # Extract year-month
+                    month = checkup_date[:7]  # YYYY-MM
+                    
+                    if month not in monthly_uncontrolled_bp:
+                        monthly_uncontrolled_bp[month] = 0
+                    
+                    # Count if BP is uncontrolled (>140 systolic)
+                    if bp_systolic > HYPERTENSION_THRESHOLD_SYSTOLIC:
+                        monthly_uncontrolled_bp[month] += 1
+            
+            return {
+                'total_ncd_patients': len(unique_patients),
+                'uncontrolled_bp_trend': dict(sorted(monthly_uncontrolled_bp.items()))
+            }
+        except Exception as e:
+            print(f"Error getting NCD analytics: {e}")
+            return {'total_ncd_patients': 0, 'uncontrolled_bp_trend': {}}

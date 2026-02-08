@@ -8,7 +8,7 @@ from datetime import datetime, date, timedelta
 import plotly.graph_objects as go
 import pandas as pd
 from database import DatabaseManager
-from utils import check_authentication, get_current_user_name
+from utils import check_authentication, get_current_user_name, select_resident_widget
 
 # Check authentication
 if not check_authentication():
@@ -29,28 +29,18 @@ st.markdown("---")
 # Patient Selection
 st.subheader("Select Patient")
 
-# Get all residents (typically adults)
-filters = {'age_min': 18}
-patients = db.filter_residents(filters)
-
-if not patients:
-    st.warning("No adult residents found in the database.")
-    st.info("Register residents first in the 'Register Resident' page.")
-    st.stop()
-
-# Create selection dropdown
-patient_options = {f"{patient['name']} ({patient['unique_id']}) - Age: {patient.get('age', 'N/A')}": patient['unique_id'] 
-                   for patient in patients}
-
-selected_display = st.selectbox("Choose a patient:", list(patient_options.keys()))
-selected_patient_id = patient_options[selected_display]
-
-# Get selected patient details
-selected_patient = db.get_resident(selected_patient_id)
+# Use the new search-to-select widget for NCD patients
+selected_patient = select_resident_widget(db, key_prefix="ncd_followup")
 
 if not selected_patient:
-    st.error("Patient not found!")
+    st.info("Search for an adult resident (18+ years) to manage NCD followup records.")
     st.stop()
+
+# Validate age (typically adults)
+age = selected_patient.get('age')
+if age is not None and age < 18:
+    st.warning(f"⚠️ {selected_patient['name']} is under 18 years old. NCD tracking is typically for adults. You can still proceed if needed.")
+
 
 # Display patient info
 col1, col2, col3, col4 = st.columns(4)
@@ -149,7 +139,7 @@ with tab1:
         
         if submitted:
             ncd_data = {
-                'resident_id': selected_patient_id,
+                'resident_id': selected_patient['unique_id'],
                 'checkup_date': checkup_date.strftime('%Y-%m-%d'),
                 'condition_type': condition_type,
                 'bp_systolic': bp_systolic if bp_systolic > 0 else None,
@@ -185,7 +175,7 @@ with tab1:
     st.markdown("---")
     st.subheader("Recent Checkup Summary")
     
-    ncd_records = db.get_ncd_followup_records(selected_patient_id)
+    ncd_records = db.get_ncd_followup_records(selected_patient['unique_id'])
     
     if ncd_records:
         latest = ncd_records[0]  # Most recent
@@ -218,7 +208,7 @@ with tab1:
 with tab2:
     st.subheader("Trend Analysis")
     
-    ncd_records = db.get_ncd_followup_records(selected_patient_id)
+    ncd_records = db.get_ncd_followup_records(selected_patient['unique_id'])
     
     if not ncd_records:
         st.info("No checkup records found. Add records in the 'Record Checkup' tab to see trends.")

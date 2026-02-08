@@ -28,6 +28,7 @@ from .validators import (
     get_bmi_category,
     validate_required_field
 )
+from .ui_components import select_resident_widget
 
 __all__ = [
     'load_config',
@@ -53,5 +54,6 @@ __all__ = [
     'validate_spo2',
     'calculate_bmi',
     'get_bmi_category',
-    'validate_required_field'
+    'validate_required_field',
+    'select_resident_widget'
 ]

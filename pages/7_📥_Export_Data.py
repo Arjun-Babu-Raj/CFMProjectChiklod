@@ -29,7 +29,7 @@ st.markdown("---")
 # Export options
 st.subheader("Select Data to Export")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4, col5, col6 = st.columns(6)
 
 with col1:
     export_residents = st.checkbox("Residents", value=True)
@@ -39,6 +39,15 @@ with col2:
 
 with col3:
     export_medical_history = st.checkbox("Medical History", value=False)
+
+with col4:
+    export_growth = st.checkbox("Child Growth", value=False)
+
+with col5:
+    export_maternal = st.checkbox("Maternal Health", value=False)
+
+with col6:
+    export_ncd = st.checkbox("NCD Followup", value=False)
 
 st.markdown("---")
 
@@ -116,6 +125,39 @@ if export_medical_history:
         else:
             st.info("No medical history data available")
 
+if export_growth:
+    with st.expander("Child Growth Data Preview", expanded=False):
+        df_growth = db.export_growth_data()
+        
+        if not df_growth.empty:
+            st.write(f"**Total Records:** {len(df_growth)}")
+            st.dataframe(df_growth.head(10), use_container_width=True)
+            st.caption(f"Showing first 10 of {len(df_growth)} growth monitoring records")
+        else:
+            st.info("No child growth data available")
+
+if export_maternal:
+    with st.expander("Maternal Health Data Preview", expanded=False):
+        df_maternal = db.export_maternal_data()
+        
+        if not df_maternal.empty:
+            st.write(f"**Total Records:** {len(df_maternal)}")
+            st.dataframe(df_maternal.head(10), use_container_width=True)
+            st.caption(f"Showing first 10 of {len(df_maternal)} maternal health records")
+        else:
+            st.info("No maternal health data available")
+
+if export_ncd:
+    with st.expander("NCD Followup Data Preview", expanded=False):
+        df_ncd = db.export_ncd_data()
+        
+        if not df_ncd.empty:
+            st.write(f"**Total Records:** {len(df_ncd)}")
+            st.dataframe(df_ncd.head(10), use_container_width=True)
+            st.caption(f"Showing first 10 of {len(df_ncd)} NCD followup records")
+        else:
+            st.info("No NCD followup data available")
+
 st.markdown("---")
 
 # Export buttons
@@ -123,7 +165,7 @@ st.subheader("⬇️ Download Data")
 
 if export_format == "CSV":
     # CSV Export
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     
     with col1:
         if export_residents:
@@ -131,14 +173,14 @@ if export_format == "CSV":
             if not df_residents.empty:
                 csv_residents = df_residents.to_csv(index=False)
                 st.download_button(
-                    label="📄 Download Residents CSV",
+                    label="📄 Residents CSV",
                     data=csv_residents,
                     file_name=f"residents_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
             else:
-                st.warning("No resident data to export")
+                st.warning("No data")
     
     with col2:
         if export_visits:
@@ -155,14 +197,14 @@ if export_format == "CSV":
             if not df_visits.empty:
                 csv_visits = df_visits.to_csv(index=False)
                 st.download_button(
-                    label="📄 Download Visits CSV",
+                    label="📄 Visits CSV",
                     data=csv_visits,
                     file_name=f"visits_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
             else:
-                st.warning("No visit data to export")
+                st.warning("No data")
     
     with col3:
         if export_medical_history:
@@ -170,14 +212,59 @@ if export_format == "CSV":
             if not df_history.empty:
                 csv_history = df_history.to_csv(index=False)
                 st.download_button(
-                    label="📄 Download Medical History CSV",
+                    label="📄 Med History CSV",
                     data=csv_history,
                     file_name=f"medical_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
             else:
-                st.warning("No medical history data to export")
+                st.warning("No data")
+    
+    with col4:
+        if export_growth:
+            df_growth = db.export_growth_data()
+            if not df_growth.empty:
+                csv_growth = df_growth.to_csv(index=False)
+                st.download_button(
+                    label="📄 Child Growth CSV",
+                    data=csv_growth,
+                    file_name=f"child_growth_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.warning("No data")
+    
+    with col5:
+        if export_maternal:
+            df_maternal = db.export_maternal_data()
+            if not df_maternal.empty:
+                csv_maternal = df_maternal.to_csv(index=False)
+                st.download_button(
+                    label="📄 Maternal CSV",
+                    data=csv_maternal,
+                    file_name=f"maternal_health_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.warning("No data")
+    
+    with col6:
+        if export_ncd:
+            df_ncd = db.export_ncd_data()
+            if not df_ncd.empty:
+                csv_ncd = df_ncd.to_csv(index=False)
+                st.download_button(
+                    label="📄 NCD Followup CSV",
+                    data=csv_ncd,
+                    file_name=f"ncd_followup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.warning("No data")
 
 else:
     # Excel Export
@@ -208,6 +295,21 @@ else:
                 df_history = db.export_medical_history_to_df()
                 if not df_history.empty:
                     df_history.to_excel(writer, sheet_name='Medical History', index=False)
+            
+            if export_growth:
+                df_growth = db.export_growth_data()
+                if not df_growth.empty:
+                    df_growth.to_excel(writer, sheet_name='Child Growth', index=False)
+            
+            if export_maternal:
+                df_maternal = db.export_maternal_data()
+                if not df_maternal.empty:
+                    df_maternal.to_excel(writer, sheet_name='Maternal Health', index=False)
+            
+            if export_ncd:
+                df_ncd = db.export_ncd_data()
+                if not df_ncd.empty:
+                    df_ncd.to_excel(writer, sheet_name='NCD Followup', index=False)
         
         buffer.seek(0)
         
@@ -228,12 +330,12 @@ st.markdown("---")
 # Export statistics
 st.subheader("📊 Export Statistics")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4, col5, col6 = st.columns(6)
 
 with col1:
     if export_residents:
         df_residents = db.export_residents_to_df()
-        st.metric("Residents to Export", len(df_residents) if not df_residents.empty else 0)
+        st.metric("Residents", len(df_residents) if not df_residents.empty else 0)
 
 with col2:
     if export_visits:
@@ -247,12 +349,27 @@ with col2:
                 (df_visits['visit_date'] <= pd.Timestamp(end_date))
             ]
         
-        st.metric("Visits to Export", len(df_visits) if not df_visits.empty else 0)
+        st.metric("Visits", len(df_visits) if not df_visits.empty else 0)
 
 with col3:
     if export_medical_history:
         df_history = db.export_medical_history_to_df()
-        st.metric("Medical History Records", len(df_history) if not df_history.empty else 0)
+        st.metric("Med History", len(df_history) if not df_history.empty else 0)
+
+with col4:
+    if export_growth:
+        df_growth = db.export_growth_data()
+        st.metric("Growth", len(df_growth) if not df_growth.empty else 0)
+
+with col5:
+    if export_maternal:
+        df_maternal = db.export_maternal_data()
+        st.metric("Maternal", len(df_maternal) if not df_maternal.empty else 0)
+
+with col6:
+    if export_ncd:
+        df_ncd = db.export_ncd_data()
+        st.metric("NCD", len(df_ncd) if not df_ncd.empty else 0)
 
 st.markdown("---")
 
@@ -264,6 +381,7 @@ st.info("""
 - Date filters apply only to visits data
 - Photo paths are included in exports but photos themselves are not
 - All exports use UTF-8 encoding
+- New modules (Child Growth, Maternal Health, NCD Followup) include resident_id for joining with residents table
 """)
 
 st.markdown("---")
