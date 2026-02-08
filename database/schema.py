@@ -17,7 +17,7 @@ def get_supabase_client() -> Client:
     try:
         supabase_url = st.secrets.get("SUPABASE_URL", os.getenv("SUPABASE_URL"))
         supabase_key = st.secrets.get("SUPABASE_KEY", os.getenv("SUPABASE_KEY"))
-    except:
+    except (AttributeError, KeyError):
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_KEY")
     

@@ -21,7 +21,7 @@ def get_supabase_client() -> Client:
     try:
         supabase_url = st.secrets.get("SUPABASE_URL", os.getenv("SUPABASE_URL"))
         supabase_key = st.secrets.get("SUPABASE_KEY", os.getenv("SUPABASE_KEY"))
-    except:
+    except (AttributeError, KeyError):
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_KEY")
     
@@ -90,7 +90,7 @@ def save_uploaded_photo(
         if bucket_name is None:
             try:
                 bucket_name = st.secrets.get("SUPABASE_BUCKET_NAME", os.getenv("SUPABASE_BUCKET_NAME", "resident-photos"))
-            except:
+            except (AttributeError, KeyError):
                 bucket_name = os.getenv("SUPABASE_BUCKET_NAME", "resident-photos")
         
         # Read uploaded file
@@ -164,7 +164,7 @@ def photo_exists(photo_url: str) -> bool:
         import requests
         response = requests.head(photo_url, timeout=5)
         return response.status_code == 200
-    except:
+    except (requests.RequestException, Exception):
         return False
 
 
@@ -183,5 +183,5 @@ def get_photo_size_mb(photo_url: str) -> float:
         response = requests.head(photo_url, timeout=5)
         size_bytes = int(response.headers.get('content-length', 0))
         return size_bytes / (1024 * 1024)
-    except:
+    except (requests.RequestException, ValueError, Exception):
         return 0.0

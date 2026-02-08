@@ -27,7 +27,7 @@ class DatabaseManager:
         try:
             supabase_url = st.secrets.get("SUPABASE_URL", os.getenv("SUPABASE_URL"))
             supabase_key = st.secrets.get("SUPABASE_KEY", os.getenv("SUPABASE_KEY"))
-        except:
+        except (AttributeError, KeyError):
             supabase_url = os.getenv("SUPABASE_URL")
             supabase_key = os.getenv("SUPABASE_KEY")
         
@@ -116,6 +116,10 @@ class DatabaseManager:
             List of matching residents
         """
         try:
+            # Supabase's .ilike operator is parameterized and safe from SQL injection
+            # Basic sanitization: limit length and remove null bytes
+            search_term = search_term[:100].replace('\x00', '')
+            
             # Supabase full-text search on name and unique_id
             response = self.supabase.table('residents').select('*').or_(
                 f'name.ilike.%{search_term}%,unique_id.ilike.%{search_term}%'

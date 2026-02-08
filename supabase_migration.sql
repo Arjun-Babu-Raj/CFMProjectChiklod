@@ -119,12 +119,12 @@ ALTER TABLE ncd_followup ENABLE ROW LEVEL SECURITY;
 
 -- Create policies (adjust based on your authentication setup)
 -- Example: Allow authenticated users to read/write all data
-CREATE POLICY "Allow authenticated access" ON residents FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated access" ON visits FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated access" ON medical_history FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated access" ON growth_monitoring FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated access" ON maternal_health FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated access" ON ncd_followup FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to residents" ON residents FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to visits" ON visits FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to medical_history" ON medical_history FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to growth_monitoring" ON growth_monitoring FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to maternal_health" ON maternal_health FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to ncd_followup" ON ncd_followup FOR ALL USING (auth.role() = 'authenticated');
 
 -- Create Storage Bucket for resident photos (run in Supabase Storage UI or via API)
 -- You'll need to create a bucket named 'resident-photos' in Supabase Storage
