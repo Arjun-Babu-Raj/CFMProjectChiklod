@@ -295,6 +295,8 @@ class DatabaseManager:
         """
         try:
             # Get visits with JOIN-like behavior (we'll fetch separately and merge)
+            # Note: The foreign key reference 'visits_resident_id_fkey' follows Supabase's
+            # default naming convention. If your FK has a custom name, update this.
             response = self.supabase.table('visits').select(
                 '*, residents!visits_resident_id_fkey(name)'
             ).order('visit_date', desc=True).order('visit_time', desc=True).limit(limit).execute()
@@ -309,7 +311,14 @@ class DatabaseManager:
             return []
         except Exception as e:
             print(f"Error getting recent visits: {e}")
-            return []
+            # Fallback: fetch without join if FK reference fails
+            try:
+                response = self.supabase.table('visits').select('*').order(
+                    'visit_date', desc=True
+                ).order('visit_time', desc=True).limit(limit).execute()
+                return response.data if response.data else []
+            except:
+                return []
     
     # ==================== MEDICAL HISTORY OPERATIONS ====================
     
@@ -385,15 +394,16 @@ class DatabaseManager:
         """
         try:
             # Gender distribution
-            response = self.supabase.table('residents').select('gender').not_.is_('gender', 'null').execute()
+            response = self.supabase.table('residents').select('gender').neq('gender', None).execute()
             gender_dist = {}
             if response.data:
                 for row in response.data:
                     gender = row.get('gender', 'Unknown')
-                    gender_dist[gender] = gender_dist.get(gender, 0) + 1
+                    if gender:  # Additional check for empty strings
+                        gender_dist[gender] = gender_dist.get(gender, 0) + 1
             
             # Age groups - fetch all ages and categorize
-            response = self.supabase.table('residents').select('age').not_.is_('age', 'null').execute()
+            response = self.supabase.table('residents').select('age').neq('age', None).execute()
             age_groups = {
                 'Child (0-17)': 0,
                 'Adult (18-39)': 0,
@@ -430,9 +440,9 @@ class DatabaseManager:
             Dictionary with monthly trends
         """
         try:
-            # Monthly registrations
-            response = self.supabase.table('residents').select('registration_date').not_.is_(
-                'registration_date', 'null'
+            # Monthly registrations - fetch all dates and process
+            response = self.supabase.table('residents').select('registration_date').neq(
+                'registration_date', None
             ).execute()
             
             registrations = {}
@@ -444,9 +454,9 @@ class DatabaseManager:
                         month = date_str[:7]
                         registrations[month] = registrations.get(month, 0) + 1
             
-            # Monthly visits
-            response = self.supabase.table('visits').select('visit_date').not_.is_(
-                'visit_date', 'null'
+            # Monthly visits - fetch all dates and process
+            response = self.supabase.table('visits').select('visit_date').neq(
+                'visit_date', None
             ).execute()
             
             visits = {}
@@ -544,6 +554,8 @@ class DatabaseManager:
         """Get list of high-risk mothers (high BP or low Hb)."""
         try:
             # Get recent ANC records with danger signs or abnormal vitals
+            # Note: The foreign key reference 'maternal_health_resident_id_fkey' follows
+            # Supabase's default naming convention. If your FK has a custom name, update this.
             response = self.supabase.table('maternal_health').select(
                 '*, residents!maternal_health_resident_id_fkey(name, unique_id)'
             ).eq('visit_type', 'ANC').order('visit_date', desc=True).execute()
@@ -573,7 +585,36 @@ class DatabaseManager:
             return high_risk
         except Exception as e:
             print(f"Error getting high risk mothers: {e}")
-            return []
+            # Fallback: fetch without join if FK reference fails
+            try:
+                response = self.supabase.table('maternal_health').select('*').eq(
+                    'visit_type', 'ANC'
+                ).order('visit_date', desc=True).execute()
+                
+                high_risk = []
+                seen_residents = set()
+                
+                if response.data:
+                    for record in response.data:
+                        resident_id = record.get('resident_id')
+                        if resident_id in seen_residents:
+                            continue
+                        
+                        bp_systolic = record.get('bp_systolic', 0) or 0
+                        hemoglobin = record.get('hemoglobin', 100) or 100
+                        danger_signs = record.get('danger_signs', '')
+                        
+                        if bp_systolic >= 140 or hemoglobin < 11 or danger_signs:
+                            seen_residents.add(resident_id)
+                            # Get resident name separately
+                            resident = self.get_resident(resident_id)
+                            if resident:
+                                record['resident_name'] = resident['name']
+                            high_risk.append(record)
+                
+                return high_risk
+            except:
+                return []
     
     def add_ncd_followup(self, ncd_data: Dict) -> bool:
         """Add NCD followup record."""
