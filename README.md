@@ -672,10 +672,9 @@ For issues, questions, or suggestions:
 
 ## 🙏 Acknowledgments
 
-- Village health workers of Chiklod for their invaluable feedback
-- Community Field Medicine Project team
-- Streamlit community for the excellent framework
-- All contributors to this project
+- Head of the Department, Department of Community and Family Medicine
+- Faculties, Department of Community and Family Medicine
+- Senior Residents, Junior Residents, Department of Community and Family Medicine
 
 ---
 
@@ -701,4 +700,4 @@ Future enhancements planned:
 
 ---
 
-**Built with ❤️ for the Chiklod Community**
+**Built For Chiklod, by Department of Community and Family Medicine **
