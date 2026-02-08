@@ -1,6 +1,8 @@
 """
 NCD (Non-Communicable Disease) Followup Page
 Track Diabetes and Hypertension patients with trend analysis.
+
+Version: 1.0.1 - Fixed import paths for Streamlit Cloud deployment
 """
 
 import streamlit as st
