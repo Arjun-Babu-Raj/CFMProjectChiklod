@@ -33,25 +33,24 @@ def check_imports():
     
     # Check third-party dependencies
     print("\n[2/5] Checking third-party dependencies...")
+    import importlib
+    
     dependencies = [
-        ('streamlit', 'st'),
-        ('pandas', 'pd'),
-        ('plotly.graph_objects', 'go'),
-        ('PIL', 'Image'),
-        ('supabase', None),
-        ('dotenv', 'load_dotenv'),
+        'streamlit',
+        'pandas',
+        'plotly.graph_objects',
+        'PIL',
+        'supabase',
+        'dotenv',
     ]
     
-    for module, alias in dependencies:
+    for module_name in dependencies:
         try:
-            if alias:
-                exec(f"import {module} as {alias}")
-            else:
-                exec(f"import {module}")
-            print(f"  ✓ {module}")
+            importlib.import_module(module_name.split('.')[0])
+            print(f"  ✓ {module_name}")
         except ImportError as e:
-            errors.append(f"{module}: {e}")
-            print(f"  ✗ {module}: {e}")
+            errors.append(f"{module_name}: {e}")
+            print(f"  ✗ {module_name}: {e}")
     
     # Check database module
     print("\n[3/5] Checking database module...")
@@ -80,9 +79,13 @@ def check_imports():
     ]
     
     try:
+        import utils
         for func_name in utils_imports:
-            exec(f"from utils import {func_name}")
-            print(f"  ✓ utils.{func_name}")
+            if not hasattr(utils, func_name):
+                errors.append(f"utils.{func_name} not found")
+                print(f"  ✗ utils.{func_name} not found")
+            else:
+                print(f"  ✓ utils.{func_name}")
     except ImportError as e:
         errors.append(f"utils: {e}")
         print(f"  ✗ utils: {e}")
