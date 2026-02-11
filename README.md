@@ -24,6 +24,7 @@ A complete, production-ready Streamlit-based health data collection and manageme
 - [Database Schema](#database-schema)
 - [Backup and Maintenance](#backup-and-maintenance)
 - [Troubleshooting](#troubleshooting)
+- [OpenMRS Integration](#openmrs-integration)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -697,6 +698,26 @@ Future enhancements planned:
 - [ ] Advanced analytics with ML predictions
 - [ ] Mobile app companion
 - [ ] Integration with national health records
+
+---
+
+## 🔗 OpenMRS Integration
+
+For information about integrating with OpenMRS (Open Medical Record System):
+
+- **[OpenMRS Comparison](OPENMRS_COMPARISON.md)** - Comprehensive comparison between this system and OpenMRS
+  - Feature comparison and analysis
+  - When to use each system
+  - Cost-benefit analysis
+  - Migration recommendations
+
+- **[OpenMRS Integration Guide](OPENMRS_INTEGRATION_GUIDE.md)** - Step-by-step implementation guide
+  - Adding FHIR export capability
+  - Direct API integration with OpenMRS
+  - Automated sync setup
+  - Deployment instructions
+
+**Quick Answer:** The current system is optimized for village-level community health work. OpenMRS is better suited for large-scale clinical facilities. See the comparison document for detailed analysis and integration options.
 
 ---
 
