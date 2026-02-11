@@ -261,6 +261,8 @@ class OpenMRSClient:
         if age:
             birth_year = datetime.now().year - age
             return f"{birth_year}-01-01"
+        # Note: Consider using None or a configurable default instead of 1970-01-01
+        # This is a placeholder that should be handled appropriately in production
         return "1970-01-01"  # Default for unknown
 
 
@@ -303,6 +305,8 @@ class FHIRExporter:
                 "value": resident_data['phone']
             }]
         
+        # Note: birthDate is optional in FHIR, so None is acceptable
+        # If birthDate is None, it will be included but validators may handle it differently
         return patient
     
     @staticmethod
@@ -461,11 +465,17 @@ class FHIRExporter:
         return bundle
     
     @staticmethod
-    def _calculate_birth_date(age: Optional[int]) -> str:
-        """Calculate approximate birth date from age."""
+    def _calculate_birth_date(age: Optional[int]) -> Optional[str]:
+        """
+        Calculate approximate birth date from age.
+        
+        Returns:
+            ISO date string or None if age is not available
+        """
         if age:
             birth_year = datetime.now().year - age
             return f"{birth_year}-01-01"
+        # Return None for unknown ages - FHIR birthDate is optional
         return None
 
 
@@ -604,7 +614,9 @@ if export_scope == "Single Resident":
 elif export_scope == "Date Range":
     col1, col2 = st.columns(2)
     with col1:
-        start_date = st.date_input("Start Date", value=datetime(2024, 1, 1))
+        # Use relative date to stay current - default to 1 year ago
+        default_start = datetime.now() - timedelta(days=365)
+        start_date = st.date_input("Start Date", value=default_start)
     with col2:
         end_date = st.date_input("End Date", value=datetime.now())
     
