@@ -62,6 +62,8 @@ This guide will help you migrate the Village Health Tracking System from SQLite 
 
 ## Step 4: Set Up Supabase Database
 
+### New installation (no existing tables)
+
 1. In your Supabase project, go to **SQL Editor**
 
 2. Copy the contents of `supabase_migration.sql` and execute it in the SQL Editor
@@ -83,6 +85,34 @@ This guide will help you migrate the Village Health Tracking System from SQLite 
      - growth_monitoring
      - maternal_health
      - ncd_followup
+
+### Upgrading an existing Supabase database
+
+If you already ran the v1 migration and need to add the newly collected data points
+(Samagra ID, Aadhar number, assessment checklists, BP fields in maternal health),
+run the **upgrade script** instead of the full migration:
+
+1. **Back up your data first.** Export your tables from the Supabase **Table Editor**
+   (or use the Supabase dashboard's database backup feature) before making schema changes
+   on a production instance.
+
+2. In your Supabase project, go to **SQL Editor**
+
+3. Copy the contents of `supabase_migration_v2.sql` and execute it
+
+   This script safely adds only the missing columns using `ADD COLUMN IF NOT EXISTS`,
+   so it is **idempotent** (safe to run more than once) and will not affect existing data.
+
+4. Newly added columns per table:
+
+   | Table | New columns |
+   |---|---|
+   | `residents` | `samagra_id`, `aadhar_no` |
+   | `growth_monitoring` | `assessment_data` (JSONB) |
+   | `maternal_health` | `bp_systolic`, `bp_diastolic`, `assessment_data` (JSONB) |
+   | `ncd_followup` | `assessment_data` (JSONB) |
+
+5. Verify the upgrade by inspecting each table in the **Table Editor** – the new columns should now appear.
 
 ## Step 5: Create Storage Bucket for Photos
 
