@@ -129,3 +129,174 @@ CREATE POLICY "Allow authenticated access to ncd_followup" ON ncd_followup FOR A
 -- Create Storage Bucket for resident photos (run in Supabase Storage UI or via API)
 -- You'll need to create a bucket named 'resident-photos' in Supabase Storage
 -- And set the bucket to be public or configure appropriate policies
+
+-- PHASE 3: Under-5 Child Assessment and NCD Proforma Tables
+
+-- Child Assessment Checklist table (comprehensive Under-5 assessment)
+CREATE TABLE IF NOT EXISTS child_assessment (
+    id SERIAL PRIMARY KEY,
+    resident_id TEXT REFERENCES residents(unique_id),
+    assessment_date TEXT NOT NULL,
+    -- Section I: Identification
+    birth_weight_kg REAL,
+    birth_order INTEGER,
+    mother_name TEXT,
+    mobile TEXT,
+    village TEXT,
+    anganwadi_registered BOOLEAN,
+    mcp_card_available BOOLEAN,
+    rch_id_available BOOLEAN,
+    -- Section II: Growth & Development status
+    weight_for_age_status TEXT,
+    stunting_status TEXT,
+    wasting_status TEXT,
+    pedal_edema_absent BOOLEAN,
+    developmental_milestones_normal BOOLEAN,
+    -- Section III: Nutrition & Prophylaxis
+    early_breastfeeding BOOLEAN,
+    exclusive_bf_months REAL,
+    complementary_feeding BOOLEAN,
+    thr_amount TEXT,
+    thr_utilized BOOLEAN,
+    thr_preparation TEXT,
+    thr_acceptance INTEGER,
+    vitamin_a_given BOOLEAN,
+    ifa_syrup_given BOOLEAN,
+    deworming_given BOOLEAN,
+    anganwadi_attendance BOOLEAN,
+    -- Section IV: Immunization
+    imm_bcg BOOLEAN,
+    imm_opv0 BOOLEAN,
+    imm_hepb_birth BOOLEAN,
+    imm_opv1 BOOLEAN,
+    imm_penta1 BOOLEAN,
+    imm_rota1 BOOLEAN,
+    imm_fipv1 BOOLEAN,
+    imm_pcv1 BOOLEAN,
+    imm_opv2 BOOLEAN,
+    imm_penta2 BOOLEAN,
+    imm_rota2 BOOLEAN,
+    imm_opv3 BOOLEAN,
+    imm_penta3 BOOLEAN,
+    imm_rota3 BOOLEAN,
+    imm_fipv2 BOOLEAN,
+    imm_pcv2 BOOLEAN,
+    imm_mr1 BOOLEAN,
+    imm_je1 BOOLEAN,
+    imm_pcv_booster BOOLEAN,
+    imm_mr2 BOOLEAN,
+    imm_je2 BOOLEAN,
+    imm_dpt_booster1 BOOLEAN,
+    imm_opv_booster BOOLEAN,
+    imm_dpt_booster2 BOOLEAN,
+    -- Section IV: Morbidity
+    morbidity_last_month BOOLEAN,
+    morbidity_types TEXT,
+    treatment_location TEXT,
+    -- Section V: Action & Counseling
+    referral_done BOOLEAN,
+    counseling_provided BOOLEAN,
+    danger_sign_convulsions BOOLEAN,
+    danger_sign_unable_to_feed BOOLEAN,
+    danger_sign_vomits_everything BOOLEAN,
+    danger_sign_lethargy BOOLEAN,
+    danger_sign_fast_breathing BOOLEAN,
+    supervisory_feedback TEXT,
+    -- Section VI: Media
+    photo_url TEXT,
+    audio_notes TEXT
+);
+
+-- Household Proforma table (NCD house visit)
+CREATE TABLE IF NOT EXISTS household_proforma (
+    id SERIAL PRIMARY KEY,
+    jr_name TEXT,
+    visit_date TEXT NOT NULL,
+    house_no TEXT,
+    head_of_family TEXT,
+    contact_number TEXT,
+    total_members INTEGER,
+    address TEXT,
+    gps_coordinate TEXT,
+    asha_worker_name TEXT
+);
+
+-- Household Members table (up to 10 per household)
+CREATE TABLE IF NOT EXISTS household_members (
+    id SERIAL PRIMARY KEY,
+    household_id INTEGER REFERENCES household_proforma(id),
+    sl_no INTEGER,
+    member_name TEXT,
+    age INTEGER,
+    sex TEXT,
+    ncd_status TEXT,
+    is_pregnant BOOLEAN,
+    is_lactating BOOLEAN,
+    is_child_under5 BOOLEAN,
+    other_category TEXT
+);
+
+-- MCH Screening table (per household member)
+CREATE TABLE IF NOT EXISTS mch_screening (
+    id SERIAL PRIMARY KEY,
+    household_id INTEGER REFERENCES household_proforma(id),
+    member_sl INTEGER,
+    category TEXT,
+    registered_in_anganwadi BOOLEAN,
+    aw_sector_name TEXT,
+    aww_name TEXT,
+    aww_mobile TEXT,
+    key_issues TEXT
+);
+
+-- Extend ncd_followup with NCD Proforma fields
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES household_proforma(id);
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS height_cm REAL;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS weight_kg REAL;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS bmi REAL;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS waist_circumference REAL;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS cbac_risk_score TEXT;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS known_disease TEXT;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS disease_duration TEXT;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS on_treatment BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS tobacco_use BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS tobacco_counseling BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS alcohol_use BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS alcohol_counseling BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS diet_salt_high BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS diet_salt_counseling BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS diet_sugar_high BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS diet_sugar_counseling BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS physically_inactive BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS activity_counseling BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS flag_persistent_cough BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS flag_mouth_ulcer BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS flag_swallowing_difficulty BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS flag_weight_loss BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS flag_fits_stroke BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS medications_detail TEXT;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS missed_days_category TEXT;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS stock_adequate BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS barrier_reason TEXT;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS foot_exam_status TEXT;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS vision_change BOOLEAN;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS status_color TEXT;
+
+-- Indexes for new tables
+CREATE INDEX IF NOT EXISTS idx_child_assessment_resident ON child_assessment(resident_id);
+CREATE INDEX IF NOT EXISTS idx_child_assessment_date ON child_assessment(assessment_date);
+CREATE INDEX IF NOT EXISTS idx_household_proforma_date ON household_proforma(visit_date);
+CREATE INDEX IF NOT EXISTS idx_household_members_household ON household_members(household_id);
+CREATE INDEX IF NOT EXISTS idx_mch_screening_household ON mch_screening(household_id);
+
+-- Enable Row Level Security for new tables
+ALTER TABLE child_assessment ENABLE ROW LEVEL SECURITY;
+ALTER TABLE household_proforma ENABLE ROW LEVEL SECURITY;
+ALTER TABLE household_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mch_screening ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for new tables
+CREATE POLICY "Allow authenticated access to child_assessment" ON child_assessment FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to household_proforma" ON household_proforma FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to household_members" ON household_members FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated access to mch_screening" ON mch_screening FOR ALL USING (auth.role() = 'authenticated');

@@ -872,3 +872,87 @@ class DatabaseManager:
         except Exception as e:
             print(f"Error getting NCD analytics: {e}")
             return {'total_ncd_patients': 0, 'uncontrolled_bp_trend': {}}
+
+    def add_child_assessment(self, assessment_data: Dict) -> bool:
+        """Add a comprehensive Under-5 child assessment record."""
+        try:
+            self.supabase.table('child_assessment').insert(assessment_data).execute()
+            return True
+        except Exception as e:
+            print(f"Error adding child assessment: {e}")
+            return False
+
+    def get_child_assessment_records(self, resident_id: str) -> List[Dict]:
+        """Get all child assessment records for a child."""
+        try:
+            response = self.supabase.table('child_assessment').select('*').eq(
+                'resident_id', resident_id
+            ).order('assessment_date', desc=True).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting child assessment records: {e}")
+            return []
+
+    def add_household_proforma(self, proforma_data: Dict) -> Optional[int]:
+        """Add a household proforma record. Returns the new record's ID."""
+        try:
+            response = self.supabase.table('household_proforma').insert(proforma_data).execute()
+            if response.data:
+                return response.data[0].get('id')
+            return None
+        except Exception as e:
+            print(f"Error adding household proforma: {e}")
+            return None
+
+    def get_household_proforma_records(self) -> List[Dict]:
+        """Get all household proforma records."""
+        try:
+            response = self.supabase.table('household_proforma').select('*').order(
+                'visit_date', desc=True
+            ).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting household proforma records: {e}")
+            return []
+
+    def add_household_members(self, members: List[Dict]) -> bool:
+        """Add household member records."""
+        try:
+            if members:
+                self.supabase.table('household_members').insert(members).execute()
+            return True
+        except Exception as e:
+            print(f"Error adding household members: {e}")
+            return False
+
+    def get_household_members(self, household_id: int) -> List[Dict]:
+        """Get all members for a household."""
+        try:
+            response = self.supabase.table('household_members').select('*').eq(
+                'household_id', household_id
+            ).order('sl_no').execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting household members: {e}")
+            return []
+
+    def add_mch_screening(self, screening_records: List[Dict]) -> bool:
+        """Add MCH screening records for a household."""
+        try:
+            if screening_records:
+                self.supabase.table('mch_screening').insert(screening_records).execute()
+            return True
+        except Exception as e:
+            print(f"Error adding MCH screening: {e}")
+            return False
+
+    def get_mch_screening(self, household_id: int) -> List[Dict]:
+        """Get MCH screening records for a household."""
+        try:
+            response = self.supabase.table('mch_screening').select('*').eq(
+                'household_id', household_id
+            ).execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting MCH screening: {e}")
+            return []
