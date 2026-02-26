@@ -120,7 +120,7 @@ with col3:
 st.markdown("---")
 
 # Two tabs: Data Entry and Growth Charts
-tab1, tab2 = st.tabs(["📝 Record Growth Data", "📊 Growth Charts & History"])
+tab1, tab2, tab3 = st.tabs(["📝 Record Growth Data", "📊 Growth Charts & History", "📋 Child Assessment Checklist"])
 
 with tab1:
     st.subheader("Record New Growth Measurement")
@@ -310,3 +310,194 @@ with tab2:
                 st.metric("Status", "At Risk", delta_color="off")
             else:
                 st.metric("Status", "Normal ✓", delta_color="off")
+
+with tab3:
+    st.subheader("Under-5 Child Assessment Checklist")
+    st.markdown("Complete the comprehensive assessment form and save to the latest growth record.")
+
+    with st.form("child_assessment_form"):
+        # --- Identification ---
+        with st.expander("🪪 Identification", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                birth_weight = st.number_input("Birth Weight (kg)", min_value=0.0, max_value=10.0,
+                                               step=0.1, format="%.2f", value=0.0)
+                birth_order = st.number_input("Birth Order", min_value=1, max_value=20, value=1)
+            with col2:
+                anganwadi_reg = st.radio("Anganwadi Registration", ["Yes", "No"], horizontal=True)
+                mcp_card = st.radio("MCP Card", ["Yes", "No"], horizontal=True)
+                rch_id = st.radio("RCH ID", ["Yes", "No"], horizontal=True)
+
+        # --- Growth & Development ---
+        with st.expander("📏 Growth & Development"):
+            col1, col2 = st.columns(2)
+            with col1:
+                weight_for_age = st.selectbox("Weight for Age",
+                                              ["Normal", "Underweight", "Severe Underweight"])
+                height_for_age = st.selectbox("Height for Age",
+                                              ["Normal", "Stunted", "Severe Stunted"])
+                weight_for_height = st.selectbox("Weight for Height (SAM/MAM)",
+                                                 ["Normal", "MAM", "SAM"])
+            with col2:
+                pedal_edema = st.radio("Bilateral Pedal Edema", ["Absent", "Present"], horizontal=True)
+                milestones = st.radio("Developmental Milestones", ["Normal", "Delayed"], horizontal=True)
+
+        # --- Nutrition ---
+        with st.expander("🥛 Nutrition"):
+            col1, col2 = st.columns(2)
+            with col1:
+                early_bf = st.radio("Early Breastfeeding (<1 hr after birth)", ["Yes", "No"], horizontal=True)
+                exclusive_bf_months = st.number_input("Exclusive BF Duration (months)",
+                                                      min_value=0, max_value=24, value=0)
+                comp_feeding = st.radio("Complementary Feeding Started", ["Yes", "No"], horizontal=True)
+                thr_received = st.text_input("THR Received Amount", placeholder="e.g., 3 kg/month")
+            with col2:
+                thr_utilized = st.text_input("THR Utilized For", placeholder="e.g., Child feeding")
+                thr_acceptance = st.slider("Child THR Acceptance (1=Poor, 5=Excellent)", 1, 5, 3)
+                vit_a = st.radio("Vitamin A", ["Given", "Not Given"], horizontal=True)
+                ifa = st.radio("IFA (Iron Folic Acid)", ["Given", "Not Given"], horizontal=True)
+                deworming = st.radio("Deworming", ["Given", "Not Given"], horizontal=True)
+
+        # --- Immunization ---
+        with st.expander("💉 Immunization"):
+            st.markdown("**Birth (0 days)**")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                bcg = st.checkbox("BCG")
+            with col2:
+                opv0 = st.checkbox("OPV-0")
+            with col3:
+                hep_b = st.checkbox("Hep-B")
+
+            st.markdown("**6/10/14 Weeks**")
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                opv = st.checkbox("OPV")
+            with col2:
+                penta = st.checkbox("Penta")
+            with col3:
+                rota = st.checkbox("Rota")
+            with col4:
+                fipv = st.checkbox("fIPV")
+            with col5:
+                pcv = st.checkbox("PCV")
+
+            st.markdown("**9-12 Months**")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                mr1 = st.checkbox("MR-1")
+            with col2:
+                je1 = st.checkbox("JE-1")
+            with col3:
+                pcv_booster = st.checkbox("PCV Booster")
+
+            st.markdown("**16-24 Months**")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                mr2 = st.checkbox("MR-2")
+            with col2:
+                je2 = st.checkbox("JE-2")
+            with col3:
+                dpt_opv_booster = st.checkbox("DPT/OPV Booster")
+
+            st.markdown("**5-6 Years**")
+            dpt2 = st.checkbox("DPT Booster (5-6 yrs)")
+
+        # --- Counseling & Action ---
+        with st.expander("📣 Counseling & Action"):
+            col1, col2 = st.columns(2)
+            with col1:
+                referral = st.selectbox("Referral", ["None", "PHC", "NRC"])
+                counseling_given = st.radio("Counseling Given", ["Yes", "No"], horizontal=True)
+            with col2:
+                st.markdown("**Mother Identifies Danger Signs:**")
+                ds_convulsions = st.checkbox("Convulsions")
+                ds_unable_drink = st.checkbox("Unable to drink")
+                ds_vomits = st.checkbox("Vomits everything")
+                ds_lethargy = st.checkbox("Lethargy / Unconscious")
+                ds_fast_breathing = st.checkbox("Fast Breathing")
+
+        submitted_assessment = st.form_submit_button("💾 Save Assessment", use_container_width=True)
+
+        if submitted_assessment:
+            assessment_data = {
+                "identification": {
+                    "birth_weight_kg": birth_weight if birth_weight > 0 else None,
+                    "birth_order": birth_order,
+                    "anganwadi_reg": anganwadi_reg,
+                    "mcp_card": mcp_card,
+                    "rch_id": rch_id
+                },
+                "growth_development": {
+                    "weight_for_age": weight_for_age,
+                    "height_for_age": height_for_age,
+                    "weight_for_height": weight_for_height,
+                    "bilateral_pedal_edema": pedal_edema,
+                    "milestones": milestones
+                },
+                "nutrition": {
+                    "early_breastfeeding": early_bf,
+                    "exclusive_bf_months": exclusive_bf_months,
+                    "complementary_feeding": comp_feeding,
+                    "thr_received": thr_received,
+                    "thr_utilized": thr_utilized,
+                    "thr_acceptance_score": thr_acceptance,
+                    "vitamin_a": vit_a,
+                    "ifa": ifa,
+                    "deworming": deworming
+                },
+                "immunization": {
+                    "bcg": bcg, "opv_0": opv0, "hep_b": hep_b,
+                    "opv": opv, "penta": penta, "rota": rota, "fipv": fipv, "pcv": pcv,
+                    "mr1": mr1, "je1": je1, "pcv_booster": pcv_booster,
+                    "mr2": mr2, "je2": je2, "dpt_opv_booster": dpt_opv_booster,
+                    "dpt2": dpt2
+                },
+                "counseling_action": {
+                    "referral": referral,
+                    "counseling_given": counseling_given,
+                    "danger_signs_identified": {
+                        "convulsions": ds_convulsions,
+                        "unable_to_drink": ds_unable_drink,
+                        "vomits_everything": ds_vomits,
+                        "lethargy": ds_lethargy,
+                        "fast_breathing": ds_fast_breathing
+                    }
+                }
+            }
+
+            # Save as a new growth monitoring record carrying only assessment_data
+            record_date = date.today()
+            existing_records = db.get_child_growth_records(selected_child['unique_id'])
+
+            if existing_records:
+                # Attach assessment_data to the most recent record by creating a new record
+                # carrying forward the latest vitals plus the assessment data
+                latest = existing_records[0]
+                assessment_record = {
+                    'resident_id': selected_child['unique_id'],
+                    'record_date': record_date.strftime('%Y-%m-%d'),
+                    'age_months': latest.get('age_months'),
+                    'weight_kg': latest.get('weight_kg'),
+                    'height_cm': latest.get('height_cm'),
+                    'muac_cm': latest.get('muac_cm'),
+                    'head_circumference_cm': latest.get('head_circumference_cm'),
+                    'z_score_weight_age': latest.get('z_score_weight_age'),
+                    'notes': 'Assessment checklist record',
+                    'assessment_data': assessment_data
+                }
+            else:
+                assessment_record = {
+                    'resident_id': selected_child['unique_id'],
+                    'record_date': record_date.strftime('%Y-%m-%d'),
+                    'notes': 'Assessment checklist record',
+                    'assessment_data': assessment_data
+                }
+
+            if db.add_growth_monitoring(assessment_record):
+                st.success("✅ Child assessment checklist saved successfully!")
+                if referral != "None":
+                    st.warning(f"⚠️ Referral to {referral} recommended.")
+            else:
+                st.error("❌ Failed to save assessment. Please try again.")
+

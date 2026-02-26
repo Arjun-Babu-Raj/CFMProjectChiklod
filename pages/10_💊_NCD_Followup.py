@@ -56,7 +56,7 @@ with col4:
 st.markdown("---")
 
 # Three tabs: Data Entry, Trends, and Due List
-tab1, tab2, tab3 = st.tabs(["📝 Record Checkup", "📊 Trend Analysis", "⏰ Due List"])
+tab1, tab2, tab3, tab4 = st.tabs(["📝 Record Checkup", "📊 Trend Analysis", "⏰ Due List", "📋 NCD Assessment"])
 
 with tab1:
     st.subheader("Record NCD Checkup")
@@ -360,3 +360,110 @@ with tab3:
         # Action buttons
         st.markdown("---")
         st.info("💡 **Action Required**: Contact these patients for follow-up appointments.")
+
+with tab4:
+    age = selected_patient.get('age')
+    if age is not None and age < 30:
+        st.warning(f"⚠️ NCD evaluation is intended for patients 30 years and older. {selected_patient['name']} is {age} years old.")
+
+    st.subheader("NCD Evaluation Form (>30 years)")
+
+    with st.form("ncd_assessment_form"):
+        # --- Red Flags ---
+        with st.expander("🚩 Red Flags", expanded=True):
+            st.markdown("Check all that apply:")
+            rf_persistent_cough = st.checkbox("Persistent Cough (>2 weeks)")
+            rf_non_healing_ulcer = st.checkbox("Non-healing ulcer")
+            rf_diff_swallowing = st.checkbox("Difficulty swallowing")
+            rf_weight_loss = st.checkbox("Unexplained weight loss")
+            rf_fits_stroke = st.checkbox("Fits / Stroke symptoms")
+
+        # --- Behavioral Risk Factors ---
+        with st.expander("🚬 Behavioral Risk Factors"):
+            col1, col2 = st.columns(2)
+            with col1:
+                tobacco_use = st.radio("Tobacco Use", ["No", "Yes"], horizontal=True)
+                tobacco_counseling = st.radio("Tobacco Counseling Given", ["No", "Yes"], horizontal=True)
+                alcohol_use = st.radio("Alcohol Use", ["No", "Yes"], horizontal=True)
+                alcohol_counseling = st.radio("Alcohol Counseling Given", ["No", "Yes"], horizontal=True)
+            with col2:
+                diet_salt = st.radio("Excess Salt in Diet", ["No", "Yes"], horizontal=True)
+                diet_salt_counseling = st.radio("Salt Reduction Counseling", ["No", "Yes"], horizontal=True)
+                diet_sugar = st.radio("Excess Sugar in Diet", ["No", "Yes"], horizontal=True)
+                diet_sugar_counseling = st.radio("Sugar Reduction Counseling", ["No", "Yes"], horizontal=True)
+                physical_activity = st.radio("Regular Physical Activity", ["Yes", "No"], horizontal=True)
+                pa_counseling = st.radio("Physical Activity Counseling", ["No", "Yes"], horizontal=True)
+
+        # --- Clinical & Adherence ---
+        with st.expander("💊 Clinical & Adherence"):
+            col1, col2 = st.columns(2)
+            with col1:
+                meds_shown = st.radio("Current Medications Shown", ["Yes", "No"], horizontal=True)
+                missed_pills = st.selectbox("Missed Pills in Last 7 Days", ["0", "1-2", "3+"])
+                stock_15_days = st.radio("Medication Stock for Next 15 Days", ["Adequate", "Inadequate"],
+                                         horizontal=True)
+                st.markdown("**Barriers to Adherence:**")
+                barrier_cost = st.checkbox("Cost")
+                barrier_side_effects = st.checkbox("Side Effects")
+                barrier_forgot = st.checkbox("Forgot")
+                barrier_feels_fine = st.checkbox("Feels Fine / Asymptomatic")
+            with col2:
+                foot_exam = st.selectbox("Foot Examination", ["No issues", "Redness", "Ulcer"])
+                vision_blurring = st.radio("New Vision Blurring", ["No", "Yes"], horizontal=True)
+
+        submitted_ncd_assessment = st.form_submit_button("💾 Save NCD Assessment", use_container_width=True)
+
+        if submitted_ncd_assessment:
+            ncd_assessment_data = {
+                "red_flags": {
+                    "persistent_cough_2wks": rf_persistent_cough,
+                    "non_healing_ulcer": rf_non_healing_ulcer,
+                    "difficulty_swallowing": rf_diff_swallowing,
+                    "weight_loss": rf_weight_loss,
+                    "fits_stroke_symptoms": rf_fits_stroke
+                },
+                "behavioral_risk_factors": {
+                    "tobacco_use": tobacco_use,
+                    "tobacco_counseling": tobacco_counseling,
+                    "alcohol_use": alcohol_use,
+                    "alcohol_counseling": alcohol_counseling,
+                    "diet_excess_salt": diet_salt,
+                    "diet_salt_counseling": diet_salt_counseling,
+                    "diet_excess_sugar": diet_sugar,
+                    "diet_sugar_counseling": diet_sugar_counseling,
+                    "physical_activity": physical_activity,
+                    "physical_activity_counseling": pa_counseling
+                },
+                "clinical_adherence": {
+                    "current_meds_shown": meds_shown,
+                    "missed_pills_last_7_days": missed_pills,
+                    "stock_for_next_15_days": stock_15_days,
+                    "barriers_to_adherence": {
+                        "cost": barrier_cost,
+                        "side_effects": barrier_side_effects,
+                        "forgot": barrier_forgot,
+                        "feels_fine": barrier_feels_fine
+                    },
+                    "foot_exam": foot_exam,
+                    "new_vision_blurring": vision_blurring
+                }
+            }
+
+            ncd_record = {
+                'resident_id': selected_patient['unique_id'],
+                'checkup_date': date.today().strftime('%Y-%m-%d'),
+                'condition_type': 'Assessment',
+                'assessment_data': ncd_assessment_data
+            }
+
+            if db.add_ncd_followup(ncd_record):
+                st.success("✅ NCD assessment saved successfully!")
+                red_flags_present = any([
+                    rf_persistent_cough, rf_non_healing_ulcer,
+                    rf_diff_swallowing, rf_weight_loss, rf_fits_stroke
+                ])
+                if red_flags_present:
+                    st.error("🚨 RED FLAGS detected! Immediate referral to physician recommended.")
+            else:
+                st.error("❌ Failed to save NCD assessment. Please try again.")
+

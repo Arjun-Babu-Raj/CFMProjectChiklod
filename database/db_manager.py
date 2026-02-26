@@ -70,7 +70,9 @@ class DatabaseManager:
                 'village_area': resident_data.get('village_area'),
                 'photo_path': resident_data.get('photo_path'),
                 'registration_date': resident_data['registration_date'],
-                'registered_by': resident_data['registered_by']
+                'registered_by': resident_data['registered_by'],
+                'samagra_id': resident_data.get('samagra_id'),
+                'aadhar_no': resident_data.get('aadhar_no')
             }
             
             self.supabase.table('residents').insert(data).execute()
@@ -134,6 +136,26 @@ class DatabaseManager:
             print(f"Error searching residents: {e}")
             return []
     
+    def get_family_members(self, samagra_id: str) -> List[Dict]:
+        """
+        Get all residents sharing the same Samagra ID (family members).
+
+        Args:
+            samagra_id: The Samagra family ID
+
+        Returns:
+            List of residents with the given Samagra ID
+        """
+        try:
+            samagra_id = samagra_id[:9].replace('\x00', '')
+            response = self.supabase.table('residents').select('*').eq(
+                'samagra_id', samagra_id
+            ).order('name').execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error getting family members: {e}")
+            return []
+
     def filter_residents(self, filters: Dict) -> List[Dict]:
         """
         Filter residents by multiple criteria.
