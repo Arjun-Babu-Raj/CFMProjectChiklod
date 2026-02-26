@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS residents (
     village_area TEXT,
     photo_path TEXT,
     registration_date TEXT,
-    registered_by TEXT
+    registered_by TEXT,
+    samagra_id TEXT,
+    aadhar_no TEXT
 );
 
 -- Create visits table
@@ -62,7 +64,8 @@ CREATE TABLE IF NOT EXISTS growth_monitoring (
     muac_cm REAL,
     head_circumference_cm REAL,
     z_score_weight_age REAL,
-    notes TEXT
+    notes TEXT,
+    assessment_data JSONB
 );
 
 -- Create maternal_health table (ANC/PNC)
@@ -82,7 +85,10 @@ CREATE TABLE IF NOT EXISTS maternal_health (
     tt_dose INTEGER,
     calcium_iron_status TEXT,
     danger_signs TEXT,
-    delivery_outcome TEXT
+    delivery_outcome TEXT,
+    bp_systolic INTEGER,
+    bp_diastolic INTEGER,
+    assessment_data JSONB
 );
 
 -- Create ncd_followup table (Diabetes/Hypertension)
@@ -97,7 +103,8 @@ CREATE TABLE IF NOT EXISTS ncd_followup (
     random_blood_sugar REAL,
     medication_adherence TEXT,
     symptoms TEXT,
-    referral_needed BOOLEAN
+    referral_needed BOOLEAN,
+    assessment_data JSONB
 );
 
 -- Create indexes for better query performance
@@ -108,6 +115,7 @@ CREATE INDEX IF NOT EXISTS idx_growth_monitoring_resident ON growth_monitoring(r
 CREATE INDEX IF NOT EXISTS idx_maternal_health_resident ON maternal_health(resident_id);
 CREATE INDEX IF NOT EXISTS idx_ncd_followup_resident ON ncd_followup(resident_id);
 CREATE INDEX IF NOT EXISTS idx_ncd_followup_date ON ncd_followup(checkup_date);
+CREATE INDEX IF NOT EXISTS idx_residents_samagra_id ON residents(samagra_id);
 
 -- Enable Row Level Security (RLS) for all tables (recommended for Supabase)
 ALTER TABLE residents ENABLE ROW LEVEL SECURITY;
