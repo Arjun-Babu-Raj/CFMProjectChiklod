@@ -120,7 +120,7 @@ with col3:
 st.markdown("---")
 
 # Two tabs: Data Entry and Growth Charts
-tab1, tab2 = st.tabs(["📝 Record Growth Data", "📊 Growth Charts & History"])
+tab1, tab2, tab3 = st.tabs(["📝 Record Growth Data", "📊 Growth Charts & History", "📋 Assessment Checklist"])
 
 with tab1:
     st.subheader("Record New Growth Measurement")
@@ -310,3 +310,282 @@ with tab2:
                 st.metric("Status", "At Risk", delta_color="off")
             else:
                 st.metric("Status", "Normal ✓", delta_color="off")
+
+with tab3:
+    st.subheader("Under-5 Child Assessment Checklist")
+    st.markdown("**Rural Field Practice Area (CRHA) – AIIMS Bhopal**")
+    st.markdown("---")
+
+    with st.form("child_assessment_form"):
+        # Section I: Identification & Registration
+        st.markdown("### I. Identification & Registration")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            ca_birth_weight = st.number_input("Birth Weight (kg)", min_value=0.0, max_value=10.0, step=0.1, format="%.2f", value=0.0)
+            ca_birth_order = st.number_input("Birth Order", min_value=1, max_value=20, value=1)
+        with col2:
+            ca_mother_name = st.text_input("Mother's Name")
+            ca_mobile = st.text_input("Mobile")
+        with col3:
+            ca_village = st.text_input("Village")
+            ca_assessment_date = st.date_input("Assessment Date", value=date.today(), max_value=date.today())
+
+        col_r1, col_r2, col_r3 = st.columns(3)
+        with col_r1:
+            ca_anganwadi_reg = st.checkbox("Child registered at Anganwadi")
+        with col_r2:
+            ca_mcp_card = st.checkbox("MCP Card available")
+        with col_r3:
+            ca_rch_id = st.checkbox("RCH ID available")
+
+        st.markdown("---")
+
+        # Section II: Growth & Development
+        st.markdown("### II. Growth & Development")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            ca_wfa_status = st.selectbox("Weight for Age", ["Normal", "Underweight", "Severely Underweight"])
+        with col2:
+            ca_stunting = st.selectbox("Height for Age (Stunting)", ["Normal", "Stunted", "Severely Stunted"])
+        with col3:
+            ca_wasting = st.selectbox("Weight for Height (Wasting)", ["Normal", "MAM", "SAM"])
+
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            ca_pedal_edema_absent = st.checkbox("Bilateral Pedal Edema checked (Absent)")
+        with col_g2:
+            ca_dev_milestones = st.checkbox("Developmental Milestones Normal (Gross Motor, Fine Motor, Language, Social)")
+
+        st.markdown("---")
+
+        # Section III: Nutrition & Prophylaxis
+        st.markdown("### III. Nutrition & Prophylaxis")
+        st.markdown("**Feeding Practices:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            ca_early_bf = st.checkbox("Early initiation of breastfeeding (<1 hr)")
+            ca_excl_bf_months = st.number_input("Exclusive Breastfeeding till (months)", min_value=0.0, max_value=24.0, step=0.5, value=0.0)
+        with col2:
+            ca_comp_feeding = st.checkbox("6–24 Months: Complementary feeding started (adequate frequency & diversity)")
+
+        st.markdown("**Take-Home Ration (THR) Details:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            ca_thr_amount = st.text_input("Amount of THR received")
+            ca_thr_utilized = st.checkbox("THR is actually being utilized by the child")
+        with col2:
+            ca_thr_preparation = st.text_input("What is being prepared/given from THR?")
+            ca_thr_acceptance = st.select_slider(
+                "Child's acceptance of THR (Taste)",
+                options=[1, 2, 3, 4, 5],
+                format_func=lambda x: {1: "1 – Strongly Dislikes", 2: "2 – Dislikes", 3: "3 – Neutral", 4: "4 – Likes", 5: "5 – Strongly Likes"}[x],
+                value=3
+            )
+
+        st.markdown("**Supplements & Services:**")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            ca_vitamin_a = st.checkbox("Vitamin A given")
+        with col2:
+            ca_ifa_syrup = st.checkbox("IFA syrup given (if applicable)")
+        with col3:
+            ca_deworming = st.checkbox("Deworming (Albendazole) given")
+        with col4:
+            ca_anganwadi_attend = st.checkbox("Child attends Anganwadi regularly & Growth chart updated")
+
+        st.markdown("---")
+
+        # Section IV: Health & Immunization
+        st.markdown("### IV. Health & Immunization")
+        st.markdown("**Immunization Status (As per National Immunization Schedule, India):**")
+
+        st.markdown("*Birth:*")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            ca_bcg = st.checkbox("BCG")
+        with col2:
+            ca_opv0 = st.checkbox("OPV-0")
+        with col3:
+            ca_hepb_birth = st.checkbox("Hep-B (Birth Dose)")
+
+        st.markdown("*6 Weeks:*")
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            ca_opv1 = st.checkbox("OPV-1")
+        with col2:
+            ca_penta1 = st.checkbox("Pentavalent-1")
+        with col3:
+            ca_rota1 = st.checkbox("Rota-1")
+        with col4:
+            ca_fipv1 = st.checkbox("fIPV-1")
+        with col5:
+            ca_pcv1 = st.checkbox("PCV-1")
+
+        st.markdown("*10 Weeks:*")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            ca_opv2 = st.checkbox("OPV-2")
+        with col2:
+            ca_penta2 = st.checkbox("Pentavalent-2")
+        with col3:
+            ca_rota2 = st.checkbox("Rota-2")
+
+        st.markdown("*14 Weeks:*")
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            ca_opv3 = st.checkbox("OPV-3")
+        with col2:
+            ca_penta3 = st.checkbox("Pentavalent-3")
+        with col3:
+            ca_rota3 = st.checkbox("Rota-3")
+        with col4:
+            ca_fipv2 = st.checkbox("fIPV-2")
+        with col5:
+            ca_pcv2 = st.checkbox("PCV-2")
+
+        st.markdown("*9–12 Months:*")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            ca_mr1 = st.checkbox("MR-1")
+        with col2:
+            ca_je1 = st.checkbox("JE-1 *(endemic districts only)*")
+        with col3:
+            ca_pcv_booster = st.checkbox("PCV Booster")
+
+        st.markdown("*16–24 Months:*")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            ca_mr2 = st.checkbox("MR-2")
+        with col2:
+            ca_je2 = st.checkbox("JE-2 *(endemic districts only)*")
+        with col3:
+            ca_dpt_booster1 = st.checkbox("DPT Booster-1")
+        with col4:
+            ca_opv_booster = st.checkbox("OPV Booster")
+
+        st.markdown("*5–6 Years:*")
+        ca_dpt_booster2 = st.checkbox("DPT Booster-2")
+
+        st.markdown("**Morbidity in last 1 month:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            ca_morbidity = st.checkbox("Any Morbidity in last 1 month? (Fever, Diarrhea, ARI, Hospital admission)")
+        with col2:
+            ca_treatment_loc = st.selectbox("If yes, treated at:", ["N/A", "Government", "Private", "Not Taken"])
+
+        st.markdown("---")
+
+        # Section V: Action & Counseling
+        st.markdown("### V. Action & Counseling")
+        col1, col2 = st.columns(2)
+        with col1:
+            ca_referral = st.checkbox("Referral done if required (PHC / NRC)")
+            ca_counseling = st.checkbox("Counseling provided (Complementary feeding, Handwashing, Feeding during illness, ORS/Zinc)")
+        with col2:
+            st.markdown("**Mother can identify 3+ Danger Signs:**")
+            ca_ds_convulsions = st.checkbox("Convulsions / seizures")
+            ca_ds_unable_feed = st.checkbox("Unable to drink or breastfeed")
+            ca_ds_vomits = st.checkbox("Vomits everything")
+            ca_ds_lethargy = st.checkbox("Lethargy or unconsciousness")
+            ca_ds_breathing = st.checkbox("Fast or difficult breathing")
+
+        ca_supervisory_feedback = st.text_area("Supervisory Feedback / Remarks")
+
+        st.markdown("---")
+
+        # Section VI: Media Attachments
+        st.markdown("### VI. Media Attachments")
+        ca_photo = st.file_uploader("📷 Capture / Upload Image (e.g., photo of the child, growth chart, or MCP card)", type=["jpg", "jpeg", "png"])
+        ca_audio_notes = st.text_area("🎙️ Audio Observation Notes (e.g., supervisor's observations or mother's response)")
+
+        ca_submitted = st.form_submit_button("💾 Save Assessment", use_container_width=True)
+
+        if ca_submitted:
+            # Handle photo upload
+            photo_url = None
+            if ca_photo:
+                from utils.image_handler import save_uploaded_photo
+                photo_url = save_uploaded_photo(ca_photo, selected_child['unique_id'], photo_type="child_assessment")
+
+            assessment_data = {
+                'resident_id': selected_child['unique_id'],
+                'assessment_date': ca_assessment_date.strftime('%Y-%m-%d'),
+                'birth_weight_kg': ca_birth_weight if ca_birth_weight > 0 else None,
+                'birth_order': ca_birth_order,
+                'mother_name': ca_mother_name if ca_mother_name else None,
+                'mobile': ca_mobile if ca_mobile else None,
+                'village': ca_village if ca_village else None,
+                'anganwadi_registered': ca_anganwadi_reg,
+                'mcp_card_available': ca_mcp_card,
+                'rch_id_available': ca_rch_id,
+                'weight_for_age_status': ca_wfa_status,
+                'stunting_status': ca_stunting,
+                'wasting_status': ca_wasting,
+                'pedal_edema_absent': ca_pedal_edema_absent,
+                'developmental_milestones_normal': ca_dev_milestones,
+                'early_breastfeeding': ca_early_bf,
+                'exclusive_bf_months': ca_excl_bf_months if ca_excl_bf_months > 0 else None,
+                'complementary_feeding': ca_comp_feeding,
+                'thr_amount': ca_thr_amount if ca_thr_amount else None,
+                'thr_utilized': ca_thr_utilized,
+                'thr_preparation': ca_thr_preparation if ca_thr_preparation else None,
+                'thr_acceptance': ca_thr_acceptance,
+                'vitamin_a_given': ca_vitamin_a,
+                'ifa_syrup_given': ca_ifa_syrup,
+                'deworming_given': ca_deworming,
+                'anganwadi_attendance': ca_anganwadi_attend,
+                'imm_bcg': ca_bcg, 'imm_opv0': ca_opv0, 'imm_hepb_birth': ca_hepb_birth,
+                'imm_opv1': ca_opv1, 'imm_penta1': ca_penta1, 'imm_rota1': ca_rota1,
+                'imm_fipv1': ca_fipv1, 'imm_pcv1': ca_pcv1,
+                'imm_opv2': ca_opv2, 'imm_penta2': ca_penta2, 'imm_rota2': ca_rota2,
+                'imm_opv3': ca_opv3, 'imm_penta3': ca_penta3, 'imm_rota3': ca_rota3,
+                'imm_fipv2': ca_fipv2, 'imm_pcv2': ca_pcv2,
+                'imm_mr1': ca_mr1, 'imm_je1': ca_je1, 'imm_pcv_booster': ca_pcv_booster,
+                'imm_mr2': ca_mr2, 'imm_je2': ca_je2, 'imm_dpt_booster1': ca_dpt_booster1,
+                'imm_opv_booster': ca_opv_booster, 'imm_dpt_booster2': ca_dpt_booster2,
+                'morbidity_last_month': ca_morbidity,
+                'treatment_location': ca_treatment_loc if ca_treatment_loc != "N/A" else None,
+                'referral_done': ca_referral,
+                'counseling_provided': ca_counseling,
+                'danger_sign_convulsions': ca_ds_convulsions,
+                'danger_sign_unable_to_feed': ca_ds_unable_feed,
+                'danger_sign_vomits_everything': ca_ds_vomits,
+                'danger_sign_lethargy': ca_ds_lethargy,
+                'danger_sign_fast_breathing': ca_ds_breathing,
+                'supervisory_feedback': ca_supervisory_feedback if ca_supervisory_feedback else None,
+                'photo_url': photo_url,
+                'audio_notes': ca_audio_notes if ca_audio_notes else None,
+            }
+
+            if db.add_child_assessment(assessment_data):
+                st.success("✅ Child assessment saved successfully!")
+                # Alert for SAM/MAM
+                if ca_wasting == "SAM":
+                    st.error("🚨 SAM detected – Refer to NRC immediately.")
+                elif ca_wasting == "MAM":
+                    st.warning("⚠️ MAM detected – Ensure THR utilization and close follow-up.")
+                if ca_morbidity:
+                    st.info("ℹ️ Morbidity noted – ensure appropriate follow-up.")
+                st.rerun()
+            else:
+                st.error("Failed to save child assessment record.")
+
+    # Show past assessments
+    st.markdown("---")
+    st.subheader("Past Assessments")
+    past_assessments = db.get_child_assessment_records(selected_child['unique_id'])
+    if past_assessments:
+        for rec in past_assessments[:3]:
+            with st.expander(f"Assessment – {rec.get('assessment_date', 'N/A')}"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.write(f"**Weight for Age:** {rec.get('weight_for_age_status', 'N/A')}")
+                    st.write(f"**Stunting:** {rec.get('stunting_status', 'N/A')}")
+                with col2:
+                    st.write(f"**Wasting:** {rec.get('wasting_status', 'N/A')}")
+                    st.write(f"**Referral Done:** {'Yes' if rec.get('referral_done') else 'No'}")
+                with col3:
+                    st.write(f"**Village:** {rec.get('village', 'N/A')}")
+                    st.write(f"**Mother:** {rec.get('mother_name', 'N/A')}")
+    else:
+        st.info("No past assessments recorded.")
