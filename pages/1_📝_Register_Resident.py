@@ -49,6 +49,10 @@ with st.form("registration_form"):
     with col2:
         village_area = st.text_input("Village Area", placeholder="Area or neighborhood")
         address = st.text_area("Address", placeholder="Full residential address", height=100)
+        samagra_id = st.text_input("Samagra ID (Family ID)", placeholder="9-digit Samagra ID",
+                                    max_chars=9, help="9-digit family Samagra ID")
+        aadhar_no = st.text_input("Aadhar Number", placeholder="12-digit Aadhar number",
+                                   max_chars=12, help="12-digit Aadhar number")
     
     st.markdown("---")
     st.subheader("Profile Photo")
@@ -109,7 +113,9 @@ with st.form("registration_form"):
                 'village_area': village_area if village_area else None,
                 'photo_path': photo_path,
                 'registration_date': datetime.now().strftime("%Y-%m-%d"),
-                'registered_by': get_current_user_name()
+                'registered_by': get_current_user_name(),
+                'samagra_id': samagra_id if samagra_id else None,
+                'aadhar_no': aadhar_no if aadhar_no else None
             }
             
             # Add to database
@@ -129,10 +135,12 @@ with st.form("registration_form"):
                         st.write(f"**Name:** {name}")
                         st.write(f"**Age:** {age if age else 'Not provided'}")
                         st.write(f"**Gender:** {gender if gender else 'Not provided'}")
+                        st.write(f"**Samagra ID:** {samagra_id if samagra_id else 'Not provided'}")
                     
                     with col2:
                         st.write(f"**Phone:** {phone if phone else 'Not provided'}")
                         st.write(f"**Village Area:** {village_area if village_area else 'Not provided'}")
+                        st.write(f"**Aadhar Number:** {aadhar_no if aadhar_no else 'Not provided'}")
                         st.write(f"**Registered by:** {get_current_user_name()}")
                         st.write(f"**Date:** {datetime.now().strftime('%Y-%m-%d')}")
             else:

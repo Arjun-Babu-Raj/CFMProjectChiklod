@@ -75,7 +75,7 @@ with col3:
 st.markdown("---")
 
 # Three tabs: ANC, PNC, and High-Risk Dashboard
-tab1, tab2, tab3 = st.tabs(["🤰 Antenatal Care (ANC)", "👶 Postnatal Care (PNC)", "⚠️ High-Risk Mothers"])
+tab1, tab2, tab3, tab4 = st.tabs(["🤰 Antenatal Care (ANC)", "👶 Postnatal Care (PNC)", "⚠️ High-Risk Mothers", "📋 MCH Proforma"])
 
 with tab1:
     st.subheader("Antenatal Care (ANC) Visit")
@@ -341,3 +341,182 @@ with tab3:
         st.dataframe(df_risk, use_container_width=True, hide_index=True)
         
         st.markdown(f"**Total High-Risk Mothers: {len(high_risk)}**")
+
+with tab4:
+    st.subheader("MCH Supportive Supervision Proforma")
+    st.markdown("Complete the MCH assessment and save it against the mother's record.")
+
+    with st.form("mch_proforma_form"):
+        # --- Early Registration ---
+        with st.expander("📋 Early Registration", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                mcp_card_avail = st.radio("MCP Card Available", ["Yes", "No"], horizontal=True)
+                issued_1st_trimester = st.radio("Issued in 1st Trimester", ["Yes", "No"], horizontal=True)
+                reg_lt12wks = st.radio("Registered <12 Weeks", ["Yes", "No"], horizontal=True)
+            with col2:
+                lmp_mch = st.date_input("LMP Date", value=None, max_value=date.today(), key="mch_lmp")
+                edd_mch = st.date_input("EDD (Expected Delivery Date)", value=None, key="mch_edd")
+                mcts_rch_id = st.text_input("MCTS / RCH ID", placeholder="Enter ID")
+
+        # --- ANC Coverage ---
+        with st.expander("🏥 ANC Coverage"):
+            col1, col2 = st.columns(2)
+            with col1:
+                min4_anc = st.radio("Minimum 4 ANC Visits Completed", ["Yes", "No"], horizontal=True)
+            with col2:
+                weight_gain_recorded = st.radio("Trimester-wise Weight Gain Recorded", ["Yes", "No"],
+                                                horizontal=True)
+
+        # --- IFA & Calcium ---
+        with st.expander("💊 IFA & Calcium"):
+            col1, col2 = st.columns(2)
+            with col1:
+                ifa_start_date = st.date_input("IFA Start Date", value=None, key="ifa_start")
+                ifa_total = st.number_input("Total IFA Tablets (>=180 recommended)",
+                                            min_value=0, max_value=500, value=0)
+                ifa_compliance = st.radio("IFA Compliance", ["Good", "Irregular", "Not taken"],
+                                          horizontal=True)
+            with col2:
+                ifa_side_effects = st.text_input("IFA Side Effects (if any)",
+                                                  placeholder="e.g., Nausea, constipation")
+                calcium_issued = st.radio("Calcium Issued", ["Yes", "No"], horizontal=True)
+
+        # --- Investigations ---
+        with st.expander("🔬 Investigations"):
+            col1, col2 = st.columns(2)
+            with col1:
+                urine_albumin_inv = st.radio("Urine Albumin", ["Done", "Not Done"], horizontal=True)
+                urine_sugar_inv = st.radio("Urine Sugar", ["Done", "Not Done"], horizontal=True)
+                blood_group_inv = st.radio("Blood Group", ["Done", "Not Done"], horizontal=True)
+                hiv_inv = st.radio("HIV Test", ["Done", "Not Done"], horizontal=True)
+                syphilis_inv = st.radio("Syphilis Test", ["Done", "Not Done"], horizontal=True)
+            with col2:
+                usg_inv = st.radio("USG (Ultrasound)", ["Done", "Not Done"], horizontal=True)
+                gdm_inv = st.radio("GDM Screening", ["Done", "Not Done"], horizontal=True)
+                hbsag_inv = st.radio("HBsAg", ["Done", "Not Done"], horizontal=True)
+                tsh_inv = st.radio("TSH", ["Done", "Not Done"], horizontal=True)
+                blood_sugar_inv = st.radio("Blood Sugar", ["Done", "Not Done"], horizontal=True)
+
+        # --- Immunization (TT/Td) ---
+        with st.expander("💉 Immunization (Td)"):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                td1 = st.radio("Td-1", ["Given", "Not Given"], horizontal=True)
+            with col2:
+                td2 = st.radio("Td-2", ["Given", "Not Given"], horizontal=True)
+            with col3:
+                td_booster = st.radio("Td Booster", ["Given", "Not Given"], horizontal=True)
+
+        # --- Birth Preparedness ---
+        with st.expander("🏠 Birth Preparedness"):
+            col1, col2 = st.columns(2)
+            with col1:
+                birth_place = st.radio("Delivery Place Identified", ["Yes", "No"], horizontal=True)
+                transport_id = st.radio("Transport Identified", ["Yes", "No"], horizontal=True)
+                emergency_contact = st.radio("Emergency Contact Identified", ["Yes", "No"], horizontal=True)
+            with col2:
+                blood_donor = st.radio("Blood Donor Identified", ["Yes", "No"], horizontal=True)
+                danger_signs_gt3 = st.radio("Knows >3 Danger Signs", ["Yes", "No"], horizontal=True)
+
+        # --- Incentives & PNC ---
+        with st.expander("🎁 Incentives & PNC"):
+            col1, col2 = st.columns(2)
+            with col1:
+                pmmvy = st.radio("PMMVY Received", ["Yes", "No"], horizontal=True)
+                jsy = st.radio("JSY Received", ["Yes", "No"], horizontal=True)
+            with col2:
+                pnc_day3 = st.radio("PNC Visit Day 3", ["Done", "Not Done"], horizontal=True)
+                pnc_day7 = st.radio("PNC Visit Day 7", ["Done", "Not Done"], horizontal=True)
+                pnc_day14 = st.radio("PNC Visit Day 14", ["Done", "Not Done"], horizontal=True)
+                pnc_day42 = st.radio("PNC Visit Day 42", ["Done", "Not Done"], horizontal=True)
+                postnatal_ifa = st.radio("Postnatal IFA", ["Given", "Not Given"], horizontal=True)
+                postnatal_calcium = st.radio("Postnatal Calcium", ["Given", "Not Given"], horizontal=True)
+
+        # --- Baby (0-6 months) ---
+        with st.expander("👶 Baby (0-6 Months)"):
+            col1, col2 = st.columns(2)
+            with col1:
+                early_bf_init = st.radio("Early Initiation of Breastfeeding", ["Yes", "No"], horizontal=True)
+                exclusive_bf = st.radio("Exclusive Breastfeeding (6 months)", ["Yes", "No"], horizontal=True)
+            with col2:
+                hbnc_visits = st.radio("HBNC Visits Done", ["Yes", "No"], horizontal=True)
+
+        submitted_mch = st.form_submit_button("💾 Save MCH Proforma", use_container_width=True)
+
+        if submitted_mch:
+            mch_assessment_data = {
+                "early_registration": {
+                    "mcp_card_available": mcp_card_avail,
+                    "issued_1st_trimester": issued_1st_trimester,
+                    "registered_lt12_weeks": reg_lt12wks,
+                    "lmp": lmp_mch.strftime('%Y-%m-%d') if lmp_mch else None,
+                    "edd": edd_mch.strftime('%Y-%m-%d') if edd_mch else None,
+                    "mcts_rch_id": mcts_rch_id if mcts_rch_id else None
+                },
+                "anc_coverage": {
+                    "min_4_visits_completed": min4_anc,
+                    "trimester_weight_gain_recorded": weight_gain_recorded
+                },
+                "ifa_calcium": {
+                    "ifa_start_date": ifa_start_date.strftime('%Y-%m-%d') if ifa_start_date else None,
+                    "ifa_total_tablets": ifa_total,
+                    "ifa_compliance": ifa_compliance,
+                    "ifa_side_effects": ifa_side_effects if ifa_side_effects else None,
+                    "calcium_issued": calcium_issued
+                },
+                "investigations": {
+                    "urine_albumin": urine_albumin_inv,
+                    "urine_sugar": urine_sugar_inv,
+                    "blood_group": blood_group_inv,
+                    "hiv": hiv_inv,
+                    "syphilis": syphilis_inv,
+                    "usg": usg_inv,
+                    "gdm": gdm_inv,
+                    "hbsag": hbsag_inv,
+                    "tsh": tsh_inv,
+                    "blood_sugar": blood_sugar_inv
+                },
+                "immunization_td": {
+                    "td1": td1,
+                    "td2": td2,
+                    "td_booster": td_booster
+                },
+                "birth_preparedness": {
+                    "birth_place_identified": birth_place,
+                    "transport_identified": transport_id,
+                    "emergency_contact": emergency_contact,
+                    "blood_donor_identified": blood_donor,
+                    "knows_gt3_danger_signs": danger_signs_gt3
+                },
+                "incentives_pnc": {
+                    "pmmvy_received": pmmvy,
+                    "jsy_received": jsy,
+                    "pnc_day3": pnc_day3,
+                    "pnc_day7": pnc_day7,
+                    "pnc_day14": pnc_day14,
+                    "pnc_day42": pnc_day42,
+                    "postnatal_ifa": postnatal_ifa,
+                    "postnatal_calcium": postnatal_calcium
+                },
+                "baby_0_6_months": {
+                    "early_bf_initiation": early_bf_init,
+                    "exclusive_breastfeeding": exclusive_bf,
+                    "hbnc_visits_done": hbnc_visits
+                }
+            }
+
+            mch_record = {
+                'resident_id': selected_mother['unique_id'],
+                'visit_type': 'ANC',
+                'visit_date': date.today().strftime('%Y-%m-%d'),
+                'lmp_date': lmp_mch.strftime('%Y-%m-%d') if lmp_mch else None,
+                'edd_date': edd_mch.strftime('%Y-%m-%d') if edd_mch else None,
+                'assessment_data': mch_assessment_data
+            }
+
+            if db.add_maternal_health_record(mch_record):
+                st.success("✅ MCH Supportive Supervision Proforma saved successfully!")
+            else:
+                st.error("❌ Failed to save MCH proforma. Please try again.")
+

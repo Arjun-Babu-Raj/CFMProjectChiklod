@@ -45,7 +45,9 @@ def init_database() -> None:
         village_area TEXT,
         photo_path TEXT,
         registration_date TEXT,
-        registered_by TEXT
+        registered_by TEXT,
+        samagra_id TEXT,
+        aadhar_no TEXT
     );
     
     -- Create visits table
@@ -93,7 +95,8 @@ def init_database() -> None:
         muac_cm REAL,
         head_circumference_cm REAL,
         z_score_weight_age REAL,
-        notes TEXT
+        notes TEXT,
+        assessment_data JSONB
     );
     
     -- Create maternal_health table (PHASE 2)
@@ -113,7 +116,8 @@ def init_database() -> None:
         tt_dose INTEGER,
         calcium_iron_status TEXT,
         danger_signs TEXT,
-        delivery_outcome TEXT
+        delivery_outcome TEXT,
+        assessment_data JSONB
     );
     
     -- Create ncd_followup table (PHASE 2)
@@ -128,7 +132,8 @@ def init_database() -> None:
         random_blood_sugar REAL,
         medication_adherence TEXT,
         symptoms TEXT,
-        referral_needed BOOLEAN
+        referral_needed BOOLEAN,
+        assessment_data JSONB
     );
     
     -- Create indexes for better query performance
@@ -139,6 +144,7 @@ def init_database() -> None:
     CREATE INDEX IF NOT EXISTS idx_maternal_health_resident ON maternal_health(resident_id);
     CREATE INDEX IF NOT EXISTS idx_ncd_followup_resident ON ncd_followup(resident_id);
     CREATE INDEX IF NOT EXISTS idx_ncd_followup_date ON ncd_followup(checkup_date);
+    CREATE INDEX IF NOT EXISTS idx_residents_samagra_id ON residents(samagra_id);
     """
     
     print("=" * 60)
