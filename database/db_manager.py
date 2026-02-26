@@ -147,7 +147,7 @@ class DatabaseManager:
             List of residents with the given Samagra ID
         """
         try:
-            samagra_id = samagra_id[:20].replace('\x00', '')
+            samagra_id = samagra_id[:9].replace('\x00', '')
             response = self.supabase.table('residents').select('*').eq(
                 'samagra_id', samagra_id
             ).order('name').execute()
