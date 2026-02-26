@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS mch_screening (
 );
 
 -- Extend ncd_followup with NCD Proforma fields
-ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS household_id INTEGER;
+ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES household_proforma(id);
 ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS height_cm REAL;
 ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS weight_kg REAL;
 ALTER TABLE ncd_followup ADD COLUMN IF NOT EXISTS bmi REAL;
