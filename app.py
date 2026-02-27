@@ -1,6 +1,6 @@
 """
 Village Health Tracking System - Main Application
-CFM Project Chiklod
+Department of Community and Family Medicine, AIIMS Bhopal
 
 Main entry point with authentication and navigation.
 """
@@ -32,7 +32,7 @@ except st.errors.StreamlitAPIException:
 def show_login():
     """Display login page."""
     st.title("🏥 Village Health Tracking System")
-    st.subheader("CFM Project Chiklod")
+    st.subheader("Department of Community and Family Medicine, AIIMS Bhopal")
     
     st.markdown("---")
     
