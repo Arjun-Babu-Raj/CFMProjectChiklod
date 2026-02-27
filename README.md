@@ -1,5 +1,5 @@
 # 🏥 Village Health Tracking System
-### Community Field Medicine Project - Chiklod
+### Department of Community and Family Medicine 
 
 A complete, production-ready Streamlit-based health data collection and management system for village residents in Chiklod. This system enables health workers to register residents, record health visits, track vitals, manage medical histories, and analyze health trends over time.
 
