@@ -79,7 +79,42 @@ tab1, tab2, tab3, tab4 = st.tabs(["🤰 Antenatal Care (ANC)", "👶 Postnatal C
 
 with tab1:
     st.subheader("Antenatal Care (ANC) Visit")
-    
+
+    # Fetch existing ANC records to allow linking subsequent visits to the same pregnancy
+    _all_maternal_records = db.get_maternal_health_records(selected_mother['unique_id'])
+    _existing_anc = [r for r in _all_maternal_records if r.get('visit_type') == 'ANC']
+
+    # Build ordered dict of unique pregnancy IDs with their LMP dates
+    _existing_pregnancies = {}
+    for _r in _existing_anc:
+        _pid = _r.get('pregnancy_id')
+        if _pid and _pid not in _existing_pregnancies:
+            _existing_pregnancies[_pid] = _r.get('lmp_date')
+
+    # Pregnancy selector (outside the form so it can drive form defaults)
+    _preg_options = ["➕ New Pregnancy"] + [
+        f"{_pid} (LMP: {_lmp})" if _lmp else _pid
+        for _pid, _lmp in _existing_pregnancies.items()
+    ]
+    _selected_preg_option = st.selectbox(
+        "Select Pregnancy",
+        _preg_options,
+        key="anc_pregnancy_select",
+        help="Select an existing pregnancy to add a follow-up visit, or choose 'New Pregnancy' to register a new one."
+    )
+
+    # Determine current pregnancy ID and default LMP from the selection
+    if _selected_preg_option == "➕ New Pregnancy":
+        _new_preg_key = f"new_preg_id_{selected_mother['unique_id']}"
+        if _new_preg_key not in st.session_state:
+            st.session_state[_new_preg_key] = f"PREG-{uuid.uuid4().hex[:8].upper()}"
+        _current_pregnancy_id = st.session_state[_new_preg_key]
+        _default_lmp = None
+    else:
+        _current_pregnancy_id = _selected_preg_option.split(" (LMP:")[0]
+        _lmp_str = _existing_pregnancies.get(_current_pregnancy_id)
+        _default_lmp = datetime.strptime(_lmp_str, '%Y-%m-%d').date() if _lmp_str else None
+
     with st.form("anc_form"):
         col1, col2 = st.columns(2)
         
@@ -87,12 +122,12 @@ with tab1:
             st.markdown("**Basic Information**")
             visit_date = st.date_input("Visit Date", value=date.today(), max_value=date.today())
             
-            # Generate or input pregnancy ID
-            pregnancy_id = st.text_input("Pregnancy ID", value=f"PREG-{uuid.uuid4().hex[:8].upper()}", 
+            # Show pregnancy ID (pre-filled from selection; user may still edit for new pregnancies)
+            pregnancy_id = st.text_input("Pregnancy ID", value=_current_pregnancy_id,
                                         help="Unique ID for this pregnancy")
             
             lmp_date = st.date_input("Last Menstrual Period (LMP)", 
-                                    value=None, 
+                                    value=_default_lmp, 
                                     max_value=date.today())
             
             # Calculate EDD automatically
@@ -161,6 +196,11 @@ with tab1:
                 if db.add_maternal_health_record(anc_data):
                     st.success("✅ ANC record saved successfully!")
                     
+                    # Clear the stored new-pregnancy ID so a fresh one is generated next time
+                    _new_preg_key = f"new_preg_id_{selected_mother['unique_id']}"
+                    if _new_preg_key in st.session_state:
+                        del st.session_state[_new_preg_key]
+                    
                     # Show alerts for high-risk factors
                     if bp_systolic >= 140 or bp_diastolic >= 90:
                         st.error("⚠️ ALERT: High Blood Pressure detected! Immediate referral recommended.")
@@ -187,10 +227,10 @@ with tab1:
         df = pd.DataFrame(anc_records)
         df = df.sort_values('visit_date', ascending=False)
         
-        display_cols = ['visit_date', 'gestational_week', 'bp_systolic', 'hemoglobin', 
+        display_cols = ['pregnancy_id', 'visit_date', 'gestational_week', 'bp_systolic', 'hemoglobin', 
                        'fetal_heart_rate', 'tt_dose', 'danger_signs']
         display_df = df[display_cols].copy()
-        display_df.columns = ['Visit Date', 'Gestational Week', 'BP Systolic', 'Hb (g/dL)', 
+        display_df.columns = ['Pregnancy ID', 'Visit Date', 'Gestational Week', 'BP Systolic', 'Hb (g/dL)', 
                              'FHR (bpm)', 'TT Dose', 'Danger Signs']
         
         st.dataframe(display_df, use_container_width=True, hide_index=True)
