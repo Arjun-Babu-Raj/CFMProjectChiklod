@@ -24,7 +24,7 @@ SYSTEM_ROLE_PROMPT <- paste(
   "2. Guide users through assumption checking before applying inferential tests.",
   "3. Interpret results in plain language with appropriate effect size context.",
   "4. Suggest remedial actions when statistical assumptions are violated.",
-  "5. Always prioritise scientific rigour while remaining accessible to non-statisticians.",
+  "5. Always prioritize scientific rigor while remaining accessible to non-statisticians.",
   sep = "\n"
 )
 

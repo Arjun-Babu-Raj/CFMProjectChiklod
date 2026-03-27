@@ -1,0 +1,25 @@
+name: jmoviLLMAssistant
+version: 1.0.0
+title: LLM Assistant
+description: >
+  AI-guided statistical analysis using Google Gemini. Validates inputs, checks
+  statistical assumptions, runs hypothesis tests, and generates plain-language
+  interpretations – all within Jamovi.
+authors:
+  - name: CFM Project Chiklod
+    affiliation: Department of Community and Family Medicine, AIIMS Bhopal
+
+analyses:
+  - title: LLM Assistant
+    name: llmAssistant
+    ns: jmoviLLMAssistant
+    menuGroup: LLM Tools
+    menuTitle: LLM Assistant
+    description: >
+      Submit a natural-language query about your data. The module validates
+      your data, checks statistical assumptions, selects the appropriate test,
+      and returns a comprehensive formatted report.
+    menuSubgroup: Analysis
+
+usesNative: true
+minApp: 1.2.0
