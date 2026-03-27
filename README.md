@@ -19,7 +19,6 @@ A complete, production-ready Streamlit-based health data collection and manageme
   - [Streamlit Cloud Deployment](#streamlit-cloud-deployment)
 - [Initial Setup](#initial-setup)
 - [Usage Guide](#usage-guide)
-- [Jamovi LLM Assistant Module](#-jamovi-llm-assistant-module)
 - [Configuration](#configuration)
 - [Database Setup](#database-setup)
 - [Database Schema](#database-schema)
@@ -323,56 +322,6 @@ Your app will be live at: `https://your-app-name.streamlit.app`
 3. Apply date filters (for visits)
 4. Choose format (CSV or Excel)
 5. Download files
-
----
-
-## 🔬 Jamovi LLM Assistant Module
-
-This repository also contains an **R-based Jamovi module** that integrates
-Google Gemini LLM for AI-guided statistical analysis.
-
-### Quick start
-
-```bash
-# 1. Clone and enter the repo
-git clone https://github.com/Arjun-Babu-Raj/CFMProjectChiklod.git
-cd CFMProjectChiklod
-
-# 2. Build the .jmo file (requires the jmvtools R package)
-Rscript -e "library(jmvtools); jmvtools::build()"
-
-# 3. In Jamovi: ≡ menu → Manage modules → Install from file…
-#    Select:  jmoviLLMAssistant_1.0.0.jmo
-#    Restart Jamovi.
-
-# 4. The "LLM Tools → LLM Assistant" item now appears in the Analyses ribbon.
-```
-
-For the complete installation walkthrough — including building the `.jmo`
-package, installing dependencies into Jamovi's bundled R, using the module
-inside Jamovi, and sourcing the R modules standalone — see:
-
-➡️ **[JAMOVI_SETUP.md](JAMOVI_SETUP.md)**
-
-### R modules (standalone use)
-
-You can also source the R modules directly in RStudio or any R session:
-
-```r
-source("R/inputValidation.R")
-source("R/assumptionChecker.R")
-source("R/analysisWorkflow.R")
-source("R/resultsFormatter.R")
-
-result <- run_analysis_workflow(
-  query         = "Compare test scores between male and female students",
-  data          = my_data,
-  analysis_type = "t_test",
-  outcome_var   = "score",
-  group_var     = "sex"
-)
-cat(format_full_report(result))
-```
 
 ---
 
