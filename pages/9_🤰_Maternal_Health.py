@@ -43,6 +43,16 @@ def calculate_gestational_age(lmp_date, visit_date):
     return None
 
 
+def render_investigation_done_result(test_name: str, key_prefix: str) -> tuple[str, str | None]:
+    """Render investigation done/result fields for MCH proforma."""
+    done_status = st.radio(f"{test_name} Done", ["Yes", "No"], horizontal=True, key=f"{key_prefix}_done")
+    test_result = None
+    if done_status == "Yes":
+        test_result = st.radio(f"{test_name} Result", ["Positive", "Negative"], horizontal=True,
+                               key=f"{key_prefix}_result")
+    return done_status, test_result
+
+
 # Mother Selection
 st.subheader("Select Mother")
 
@@ -398,6 +408,7 @@ with tab4:
                 lmp_mch = st.date_input("LMP Date", value=None, max_value=date.today(), key="mch_lmp")
                 edd_mch = st.date_input("EDD (Expected Delivery Date)", value=None, key="mch_edd")
                 mcts_rch_id = st.text_input("MCTS / RCH ID", placeholder="Enter ID")
+                husband_name = st.text_input("Husband's Name", placeholder="Enter husband's name")
 
         # --- ANC Coverage ---
         with st.expander("🏥 ANC Coverage"):
@@ -429,12 +440,13 @@ with tab4:
                 urine_albumin_inv = st.radio("Urine Albumin", ["Done", "Not Done"], horizontal=True)
                 urine_sugar_inv = st.radio("Urine Sugar", ["Done", "Not Done"], horizontal=True)
                 blood_group_inv = st.radio("Blood Group", ["Done", "Not Done"], horizontal=True)
-                hiv_inv = st.radio("HIV Test", ["Done", "Not Done"], horizontal=True)
+                hiv_done, hiv_result = render_investigation_done_result("HIV Test", "mch_hiv")
                 syphilis_inv = st.radio("Syphilis Test", ["Done", "Not Done"], horizontal=True)
             with col2:
                 usg_inv = st.radio("USG (Ultrasound)", ["Done", "Not Done"], horizontal=True)
                 gdm_inv = st.radio("GDM Screening", ["Done", "Not Done"], horizontal=True)
-                hbsag_inv = st.radio("HBsAg", ["Done", "Not Done"], horizontal=True)
+                hbsag_done, hbsag_result = render_investigation_done_result("HBsAg", "mch_hbsag")
+                hcv_done, hcv_result = render_investigation_done_result("HCV", "mch_hcv")
                 tsh_inv = st.radio("TSH", ["Done", "Not Done"], horizontal=True)
                 blood_sugar_inv = st.radio("Blood Sugar", ["Done", "Not Done"], horizontal=True)
 
@@ -492,7 +504,8 @@ with tab4:
                     "registered_lt12_weeks": reg_lt12wks,
                     "lmp": lmp_mch.strftime('%Y-%m-%d') if lmp_mch else None,
                     "edd": edd_mch.strftime('%Y-%m-%d') if edd_mch else None,
-                    "mcts_rch_id": mcts_rch_id if mcts_rch_id else None
+                    "mcts_rch_id": mcts_rch_id if mcts_rch_id else None,
+                    "husband_name": husband_name if husband_name else None
                 },
                 "anc_coverage": {
                     "min_4_visits_completed": min4_anc,
@@ -509,11 +522,21 @@ with tab4:
                     "urine_albumin": urine_albumin_inv,
                     "urine_sugar": urine_sugar_inv,
                     "blood_group": blood_group_inv,
-                    "hiv": hiv_inv,
+                    "hiv": {
+                        "done": hiv_done,
+                        "result": hiv_result
+                    },
                     "syphilis": syphilis_inv,
                     "usg": usg_inv,
                     "gdm": gdm_inv,
-                    "hbsag": hbsag_inv,
+                    "hbsag": {
+                        "done": hbsag_done,
+                        "result": hbsag_result
+                    },
+                    "hcv": {
+                        "done": hcv_done,
+                        "result": hcv_result
+                    },
                     "tsh": tsh_inv,
                     "blood_sugar": blood_sugar_inv
                 },
@@ -559,4 +582,3 @@ with tab4:
                 st.success("✅ MCH Supportive Supervision Proforma saved successfully!")
             else:
                 st.error("❌ Failed to save MCH proforma. Please try again.")
-
