@@ -47,7 +47,7 @@ def render_investigation_done_result(test_name: str, key_prefix: str) -> tuple[s
     """Render investigation done/result fields for MCH proforma."""
     done_status = st.radio(
         f"{test_name} Done",
-        ["Not Done", "Done"],
+        ["Done", "Not Done"],
         horizontal=True,
         key=f"{key_prefix}_done"
     )
@@ -503,7 +503,7 @@ with tab4:
             with col2:
                 hbnc_visits = st.radio("HBNC Visits Done", ["Yes", "No"], horizontal=True)
 
-        remarks = st.text_area("Remarks", placeholder="Add any additional remarks")
+        remarks = st.text_area("Remarks", placeholder="Add any additional remarks", key="mch_remarks")
 
         submitted_mch = st.form_submit_button("💾 Save MCH Proforma", use_container_width=True)
 
