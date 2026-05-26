@@ -103,9 +103,9 @@ if not selected_child:
     st.info("Search for a child (under 5 years) to start tracking growth.")
     st.stop()
 
-# Validate age
-if selected_child.get('age') is None or selected_child.get('age') > 5:
-    st.warning(f"⚠️ {selected_child['name']} is not in the child age group (under 5 years). Please select a different resident.")
+# Validate cohort eligibility parameters
+if selected_child.get('age') is None or selected_child.get('age') > 9:
+    st.warning(f"⚠️ {selected_child['name']} is not in the tracked child cohort age limit (under 10 years). Please select a different resident.")
     st.stop()
 
 # Display child info
