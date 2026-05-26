@@ -62,6 +62,12 @@ with tab1:
     st.subheader("Record NCD Checkup")
     
     with st.form("ncd_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         col1, col2 = st.columns(2)
         
         with col1:
@@ -148,7 +154,8 @@ with tab1:
                 'random_blood_sugar': random_blood_sugar if random_blood_sugar > 0 else None,
                 'medication_adherence': medication_adherence,
                 'symptoms': symptoms if symptoms else None,
-                'referral_needed': referral_needed
+                'referral_needed': referral_needed,
+                'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
             }
             
             if db.add_ncd_followup(ncd_data):
@@ -369,6 +376,12 @@ with tab4:
     st.subheader("NCD Evaluation Form (>30 years)")
 
     with st.form("ncd_assessment_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         # --- Red Flags ---
         with st.expander("🚩 Red Flags", expanded=True):
             st.markdown("Check all that apply:")
@@ -453,7 +466,8 @@ with tab4:
                 'resident_id': selected_patient['unique_id'],
                 'checkup_date': date.today().strftime('%Y-%m-%d'),
                 'condition_type': 'Assessment',
-                'assessment_data': ncd_assessment_data
+                'assessment_data': ncd_assessment_data,
+                'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
             }
 
             if db.add_ncd_followup(ncd_record):
@@ -466,4 +480,3 @@ with tab4:
                     st.error("🚨 RED FLAGS detected! Immediate referral to physician recommended.")
             else:
                 st.error("❌ Failed to save NCD assessment. Please try again.")
-

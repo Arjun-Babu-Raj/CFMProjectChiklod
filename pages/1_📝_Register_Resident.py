@@ -37,6 +37,11 @@ success = False
 # Registration form
 with st.form("registration_form"):
     st.subheader("Personal Information")
+    data_entry_person = st.text_input(
+        "Data Entry Person *",
+        value=get_current_user_name(),
+        placeholder="Enter name of person entering this form"
+    )
     
     col1, col2 = st.columns(2)
     
@@ -78,6 +83,10 @@ with st.form("registration_form"):
         is_valid, error = validate_required_field(name, "Name")
         if not is_valid:
             errors.append(error)
+
+        is_valid, error = validate_required_field(data_entry_person, "Data Entry Person")
+        if not is_valid:
+            errors.append(error)
         
         is_valid, error = validate_age(age)
         if not is_valid:
@@ -113,7 +122,7 @@ with st.form("registration_form"):
                 'village_area': village_area if village_area else None,
                 'photo_path': photo_path,
                 'registration_date': datetime.now().strftime("%Y-%m-%d"),
-                'registered_by': get_current_user_name(),
+                'registered_by': data_entry_person.strip(),
                 'samagra_id': samagra_id if samagra_id else None,
                 'aadhar_no': aadhar_no if aadhar_no else None
             }
@@ -141,7 +150,7 @@ with st.form("registration_form"):
                         st.write(f"**Phone:** {phone if phone else 'Not provided'}")
                         st.write(f"**Village Area:** {village_area if village_area else 'Not provided'}")
                         st.write(f"**Aadhar Number:** {aadhar_no if aadhar_no else 'Not provided'}")
-                        st.write(f"**Registered by:** {get_current_user_name()}")
+                        st.write(f"**Registered by:** {data_entry_person.strip()}")
                         st.write(f"**Date:** {datetime.now().strftime('%Y-%m-%d')}")
             else:
                 st.error("❌ Failed to register resident. Please try again.")

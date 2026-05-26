@@ -126,6 +126,12 @@ with tab1:
     st.subheader("Record New Growth Measurement")
     
     with st.form("growth_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         col1, col2 = st.columns(2)
         
         with col1:
@@ -161,7 +167,8 @@ with tab1:
                     'muac_cm': muac_cm if muac_cm > 0 else None,
                     'head_circumference_cm': head_circumference_cm if head_circumference_cm > 0 else None,
                     'z_score_weight_age': z_score,
-                    'notes': notes if notes else None
+                    'notes': notes if notes else None,
+                    'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
                 }
                 
                 if db.add_growth_monitoring(growth_data):
@@ -316,6 +323,12 @@ with tab3:
     st.markdown("Complete the comprehensive assessment form and save to the latest growth record.")
 
     with st.form("child_assessment_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         # --- Identification ---
         with st.expander("🪪 Identification", expanded=True):
             col1, col2 = st.columns(2)
@@ -484,14 +497,16 @@ with tab3:
                     'head_circumference_cm': latest.get('head_circumference_cm'),
                     'z_score_weight_age': latest.get('z_score_weight_age'),
                     'notes': 'Assessment checklist record',
-                    'assessment_data': assessment_data
+                    'assessment_data': assessment_data,
+                    'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
                 }
             else:
                 assessment_record = {
                     'resident_id': selected_child['unique_id'],
                     'record_date': record_date.strftime('%Y-%m-%d'),
                     'notes': 'Assessment checklist record',
-                    'assessment_data': assessment_data
+                    'assessment_data': assessment_data,
+                    'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
                 }
 
             if db.add_growth_monitoring(assessment_record):
@@ -500,4 +515,3 @@ with tab3:
                     st.warning(f"⚠️ Referral to {referral} recommended.")
             else:
                 st.error("❌ Failed to save assessment. Please try again.")
-

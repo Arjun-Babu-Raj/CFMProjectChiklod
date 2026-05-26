@@ -21,6 +21,9 @@ CREATE INDEX IF NOT EXISTS idx_residents_samagra_id ON residents(samagra_id);
 ALTER TABLE growth_monitoring
     ADD COLUMN IF NOT EXISTS assessment_data JSONB;
 
+ALTER TABLE growth_monitoring
+    ADD COLUMN IF NOT EXISTS data_entry_person TEXT;
+
 -- ============================================================
 -- 3. maternal_health: add BP columns and JSON proforma column
 -- ============================================================
@@ -33,8 +36,14 @@ ALTER TABLE maternal_health
 ALTER TABLE maternal_health
     ADD COLUMN IF NOT EXISTS assessment_data JSONB;
 
+ALTER TABLE maternal_health
+    ADD COLUMN IF NOT EXISTS data_entry_person TEXT;
+
 -- ============================================================
 -- 4. ncd_followup: add JSON assessment column
 -- ============================================================
 ALTER TABLE ncd_followup
     ADD COLUMN IF NOT EXISTS assessment_data JSONB;
+
+ALTER TABLE ncd_followup
+    ADD COLUMN IF NOT EXISTS data_entry_person TEXT;

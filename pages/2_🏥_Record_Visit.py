@@ -69,6 +69,12 @@ if resident:
     success = False
     
     with st.form("visit_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         # Vitals
         st.write("**Vital Signs**")
         
@@ -163,7 +169,7 @@ if resident:
                     'resident_id': resident['unique_id'],
                     'visit_date': datetime.now().strftime("%Y-%m-%d"),
                     'visit_time': datetime.now().strftime("%H:%M:%S"),
-                    'health_worker': get_current_user_name(),
+                    'health_worker': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name(),
                     'bp_systolic': bp_systolic,
                     'bp_diastolic': bp_diastolic,
                     'temperature': temperature,

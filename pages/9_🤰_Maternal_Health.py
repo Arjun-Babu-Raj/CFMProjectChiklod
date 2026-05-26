@@ -116,6 +116,12 @@ with tab1:
         _default_lmp = datetime.strptime(_lmp_str, '%Y-%m-%d').date() if _lmp_str else None
 
     with st.form("anc_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         col1, col2 = st.columns(2)
         
         with col1:
@@ -190,7 +196,8 @@ with tab1:
                     'calcium_iron_status': calcium_iron_status if calcium_iron_status else None,
                     'danger_signs': danger_signs if danger_signs else None,
                     'bp_systolic': bp_systolic if bp_systolic > 0 else None,
-                    'delivery_outcome': None
+                    'delivery_outcome': None,
+                    'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
                 }
                 
                 if db.add_maternal_health_record(anc_data):
@@ -241,6 +248,12 @@ with tab2:
     st.subheader("Postnatal Care (PNC) Visit")
     
     with st.form("pnc_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         col1, col2 = st.columns(2)
         
         with col1:
@@ -299,7 +312,8 @@ with tab2:
                     'calcium_iron_status': None,
                     'danger_signs': danger_signs_pnc if danger_signs_pnc else None,
                     'bp_systolic': bp_systolic_pnc if bp_systolic_pnc > 0 else None,
-                    'delivery_outcome': delivery_outcome if delivery_outcome else None
+                    'delivery_outcome': delivery_outcome if delivery_outcome else None,
+                    'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
                 }
                 
                 if db.add_maternal_health_record(pnc_data):
@@ -387,6 +401,12 @@ with tab4:
     st.markdown("Complete the MCH assessment and save it against the mother's record.")
 
     with st.form("mch_proforma_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         # --- Early Registration ---
         with st.expander("📋 Early Registration", expanded=True):
             col1, col2 = st.columns(2)
@@ -552,11 +572,11 @@ with tab4:
                 'visit_date': date.today().strftime('%Y-%m-%d'),
                 'lmp_date': lmp_mch.strftime('%Y-%m-%d') if lmp_mch else None,
                 'edd_date': edd_mch.strftime('%Y-%m-%d') if edd_mch else None,
-                'assessment_data': mch_assessment_data
+                'assessment_data': mch_assessment_data,
+                'data_entry_person': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
             }
 
             if db.add_maternal_health_record(mch_record):
                 st.success("✅ MCH Supportive Supervision Proforma saved successfully!")
             else:
                 st.error("❌ Failed to save MCH proforma. Please try again.")
-

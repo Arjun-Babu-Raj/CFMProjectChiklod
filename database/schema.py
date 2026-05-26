@@ -96,7 +96,8 @@ def init_database() -> None:
         head_circumference_cm REAL,
         z_score_weight_age REAL,
         notes TEXT,
-        assessment_data JSONB
+        assessment_data JSONB,
+        data_entry_person TEXT
     );
     
     -- Create maternal_health table (PHASE 2)
@@ -117,7 +118,8 @@ def init_database() -> None:
         calcium_iron_status TEXT,
         danger_signs TEXT,
         delivery_outcome TEXT,
-        assessment_data JSONB
+        assessment_data JSONB,
+        data_entry_person TEXT
     );
     
     -- Create ncd_followup table (PHASE 2)
@@ -133,7 +135,8 @@ def init_database() -> None:
         medication_adherence TEXT,
         symptoms TEXT,
         referral_needed BOOLEAN,
-        assessment_data JSONB
+        assessment_data JSONB,
+        data_entry_person TEXT
     );
     
     -- Create indexes for better query performance

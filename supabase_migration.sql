@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS growth_monitoring (
     head_circumference_cm REAL,
     z_score_weight_age REAL,
     notes TEXT,
-    assessment_data JSONB
+    assessment_data JSONB,
+    data_entry_person TEXT
 );
 
 -- Create maternal_health table (ANC/PNC)
@@ -88,7 +89,8 @@ CREATE TABLE IF NOT EXISTS maternal_health (
     delivery_outcome TEXT,
     bp_systolic INTEGER,
     bp_diastolic INTEGER,
-    assessment_data JSONB
+    assessment_data JSONB,
+    data_entry_person TEXT
 );
 
 -- Create ncd_followup table (Diabetes/Hypertension)
@@ -104,7 +106,8 @@ CREATE TABLE IF NOT EXISTS ncd_followup (
     medication_adherence TEXT,
     symptoms TEXT,
     referral_needed BOOLEAN,
-    assessment_data JSONB
+    assessment_data JSONB,
+    data_entry_person TEXT
 );
 
 -- Create indexes for better query performance

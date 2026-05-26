@@ -53,6 +53,12 @@ if resident:
     success = False
     
     with st.form("medical_history_form"):
+        data_entry_person = st.text_input(
+            "Data Entry Person *",
+            value=get_current_user_name(),
+            placeholder="Enter name of person entering this form"
+        )
+
         chronic_conditions = st.text_area(
             "Chronic Conditions",
             value=existing_history.get('chronic_conditions', '') if existing_history else '',
@@ -120,7 +126,7 @@ if resident:
                 'family_history': family_history if family_history else None,
                 'notes': notes if notes else None,
                 'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'updated_by': get_current_user_name()
+                'updated_by': data_entry_person.strip() if data_entry_person.strip() else get_current_user_name()
             }
             
             # Add or update in database
