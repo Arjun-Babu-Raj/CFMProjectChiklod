@@ -44,9 +44,12 @@ with st.form("registration_form"):
         name = st.text_input("Full Name *", placeholder="Enter full name")
         age = st.number_input("Age", min_value=0, max_value=120, value=None, placeholder="Enter age")
         gender = st.selectbox("Gender", ["", "Male", "Female", "Other"])
+        father_name = st.text_input("Father's Name", placeholder="Enter father's name")
+        mother_name = st.text_input("Mother's Name", placeholder="Enter mother's name")
         phone = st.text_input("Phone Number", placeholder="10-digit phone number")
     
     with col2:
+        date_of_birth = st.date_input("Date of Birth", value=None, format="YYYY-MM-DD")
         village_area = st.text_input("Village Area", placeholder="Area or neighborhood")
         address = st.text_area("Address", placeholder="Full residential address", height=100)
         samagra_id = st.text_input("Samagra ID (Family ID)", placeholder="9-digit Samagra ID",
@@ -115,7 +118,10 @@ with st.form("registration_form"):
                 'registration_date': datetime.now().strftime("%Y-%m-%d"),
                 'registered_by': get_current_user_name(),
                 'samagra_id': samagra_id if samagra_id else None,
-                'aadhar_no': aadhar_no if aadhar_no else None
+                'aadhar_no': aadhar_no if aadhar_no else None,
+                'father_name': father_name if father_name else None,
+                'mother_name': mother_name if mother_name else None,
+                'date_of_birth': date_of_birth.strftime("%Y-%m-%d") if date_of_birth else None
             }
             
             # Add to database
@@ -136,8 +142,11 @@ with st.form("registration_form"):
                         st.write(f"**Age:** {age if age else 'Not provided'}")
                         st.write(f"**Gender:** {gender if gender else 'Not provided'}")
                         st.write(f"**Samagra ID:** {samagra_id if samagra_id else 'Not provided'}")
+                        st.write(f"**Father's Name:** {father_name if father_name else 'Not provided'}")
+                        st.write(f"**Mother's Name:** {mother_name if mother_name else 'Not provided'}")
                     
                     with col2:
+                        st.write(f"**Date of Birth:** {date_of_birth.strftime('%Y-%m-%d') if date_of_birth else 'Not provided'}")
                         st.write(f"**Phone:** {phone if phone else 'Not provided'}")
                         st.write(f"**Village Area:** {village_area if village_area else 'Not provided'}")
                         st.write(f"**Aadhar Number:** {aadhar_no if aadhar_no else 'Not provided'}")
@@ -171,9 +180,12 @@ if recent_residents:
                 st.write(f"**Age:** {resident['age'] if resident['age'] else 'N/A'}")
                 st.write(f"**Gender:** {resident['gender'] if resident['gender'] else 'N/A'}")
                 st.write(f"**Phone:** {resident['phone'] if resident['phone'] else 'N/A'}")
+                st.write(f"**Date of Birth:** {resident['date_of_birth'] if resident.get('date_of_birth') else 'N/A'}")
             
             with col2:
                 st.write(f"**Village Area:** {resident['village_area'] if resident['village_area'] else 'N/A'}")
+                st.write(f"**Father's Name:** {resident['father_name'] if resident.get('father_name') else 'N/A'}")
+                st.write(f"**Mother's Name:** {resident['mother_name'] if resident.get('mother_name') else 'N/A'}")
                 st.write(f"**Registered:** {resident['registration_date']}")
                 st.write(f"**By:** {resident['registered_by']}")
 else:

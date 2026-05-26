@@ -72,7 +72,10 @@ class DatabaseManager:
                 'registration_date': resident_data['registration_date'],
                 'registered_by': resident_data['registered_by'],
                 'samagra_id': resident_data.get('samagra_id'),
-                'aadhar_no': resident_data.get('aadhar_no')
+                'aadhar_no': resident_data.get('aadhar_no'),
+                'father_name': resident_data.get('father_name'),
+                'mother_name': resident_data.get('mother_name'),
+                'date_of_birth': resident_data.get('date_of_birth')
             }
             
             self.supabase.table('residents').insert(data).execute()

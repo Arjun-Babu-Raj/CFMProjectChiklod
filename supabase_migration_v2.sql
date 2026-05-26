@@ -12,6 +12,15 @@ ALTER TABLE residents
 ALTER TABLE residents
     ADD COLUMN IF NOT EXISTS aadhar_no TEXT;
 
+ALTER TABLE residents
+    ADD COLUMN IF NOT EXISTS father_name TEXT;
+
+ALTER TABLE residents
+    ADD COLUMN IF NOT EXISTS mother_name TEXT;
+
+ALTER TABLE residents
+    ADD COLUMN IF NOT EXISTS date_of_birth TEXT;
+
 -- Index for fast family-lookup by Samagra ID
 CREATE INDEX IF NOT EXISTS idx_residents_samagra_id ON residents(samagra_id);
 
