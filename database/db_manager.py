@@ -761,49 +761,76 @@ class DatabaseManager:
     
     # ==================== NEW MODULE ANALYTICS ====================
     
-    def get_child_health_analytics(self) -> Dict:
+ def get_child_health_analytics(self) -> Dict:
         """
-        Get analytics data for child health.
+        Get comprehensive analytics data for child health up to 10 years.
         
         Returns:
-            Dictionary with child health statistics
+            Dictionary with child health statistics, nutritional trends, and compliance metrics
         """
         try:
-            # Get children under 5 years
-            children = self.filter_residents({'age_min': 0, 'age_max': 5})
+            # 1. Expand the target pediatric demographic tracking limit to < 10 years
+            children = self.filter_residents({'age_min': 0, 'age_max': 9})
             total_children = len(children)
             
-            # Get all growth records with latest z-scores
+            # Get all growth monitoring records logged in the system
             response = self.supabase.table('growth_monitoring').select('*').order(
                 'record_date', desc=True
             ).execute()
             
             growth_records = response.data if response.data else []
             
-            # Calculate nutritional status distribution
-            nutritional_status = {'Normal': 0, 'Malnourished': 0}
+            # Track which children have system history logs
             seen_residents = set()
+            nutritional_status = {'Normal': 0, 'Malnourished': 0}
+            age_bracket_distribution = {'Infant (0-1Y)': 0, 'Toddler (1-3Y)': 0, 'Preschool (3-6Y)': 0, 'School Age (6-10Y)': 0}
             
             for record in growth_records:
                 resident_id = record.get('resident_id')
                 if resident_id not in seen_residents:
                     seen_residents.add(resident_id)
-                    z_score = record.get('z_score_weight_age', 0)
+                    
+                    # Evaluate structural WHO Z-score metrics
+                    z_score = record.get('z_score_weight_age')
                     if z_score is not None:
-                        if z_score < MALNUTRITION_Z_SCORE_THRESHOLD:
+                        if float(z_score) < -2.0:
                             nutritional_status['Malnourished'] += 1
                         else:
                             nutritional_status['Normal'] += 1
-            
+
+            # Categorize the current cohort by developmental age brackets
+            for child in children:
+                age = child.get('age', 0)
+                if age < 1:
+                    age_bracket_distribution['Infant (0-1Y)'] += 1
+                elif 1 <= age < 3:
+                    age_bracket_distribution['Toddler (1-3Y)'] += 1
+                elif 3 <= age < 6:
+                    age_bracket_distribution['Preschool (3-6Y)'] += 1
+                elif 6 <= age < 10:
+                    age_bracket_distribution['School Age (6-10Y)'] += 1
+
+            children_tracked_count = len(seen_residents)
+            coverage_percentage = (children_tracked_count / total_children * 100) if total_children > 0 else 0.0
+
             return {
                 'total_children': total_children,
+                'children_with_records': children_tracked_count,
+                'coverage_percentage': round(coverage_percentage, 1),
                 'nutritional_status': nutritional_status,
-                'children_with_records': len(seen_residents)
+                'age_brackets': age_bracket_distribution,
+                'raw_records_count': len(growth_records)
             }
         except Exception as e:
-            print(f"Error getting child health analytics: {e}")
-            return {'total_children': 0, 'nutritional_status': {}, 'children_with_records': 0}
-    
+            print(f"Error compiling child health analytics matrix: {e}")
+            return {
+                'total_children': 0,
+                'children_with_records': 0,
+                'coverage_percentage': 0.0,
+                'nutritional_status': {'Normal': 0, 'Malnourished': 0},
+                'age_brackets': {'Infant (0-1Y)': 0, 'Toddler (1-3Y)': 0, 'Preschool (3-6Y)': 0, 'School Age (6-10Y)': 0},
+                'raw_records_count': 0
+            }
     def get_maternal_health_analytics(self) -> Dict:
         """
         Get analytics data for maternal health.
