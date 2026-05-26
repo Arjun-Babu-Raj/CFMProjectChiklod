@@ -184,30 +184,71 @@ with tab1:
         st.info("No resident data available")
 
 with tab2:
-    # Child Health Analytics
-    st.subheader("👶 Child Health Analytics")
+    st.subheader("👶 Comprehensive Child Health & Nutrition Analytics")
     
+    # Execute the updated analytics compilation method
     child_analytics = db.get_child_health_analytics()
     
-    # Metrics
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("Total Children (<5 years)", child_analytics['total_children'])
-    
-    with col2:
-        st.metric("Children with Growth Records", child_analytics['children_with_records'])
-    
-    with col3:
-        if child_analytics['children_with_records'] > 0:
-            malnourished_pct = (child_analytics['nutritional_status'].get('Malnourished', 0) / 
-                               child_analytics['children_with_records'] * 100)
-            st.metric("Malnourished %", f"{malnourished_pct:.1f}%")
-        else:
-            st.metric("Malnourished %", "N/A")
-    
+    # 1. Row of Primary Public Health Indicators
+    m_col1, m_col2, m_col3 = st.columns(3)
+    with m_col1:
+        st.metric("Total Pediatric Population (<10Y)", child_analytics['total_children'])
+    with m_col2:
+        st.metric("Children Monitored with Active Logs", child_analytics['children_with_records'])
+    with m_col3:
+        st.metric("Growth Record Coverage Rate", f"{child_analytics['coverage_percentage']}%")
+        
     st.markdown("---")
     
+    # Calculate the Malnutrition Percentage based on active records
+    total_status_tracked = sum(child_analytics['nutritional_status'].values())
+    malnutrition_rate = 0.0
+    if total_status_tracked > 0:
+        malnutrition_rate = (child_analytics['nutritional_status']['Malnourished'] / total_status_tracked) * 100
+
+    # Display an inline status card for public health evaluation
+    if malnutrition_rate > 15.0:
+        st.error(f"⚠️ **Alert:** High Malnutrition Prevalence Detected: {malnutrition_rate:.1f}% (Exceeds ICDS threshold limits)")
+    else:
+        st.success(f"✅ **Status:** Baseline Malnutrition Prevalence: {malnutrition_rate:.1f}% within expected project boundaries.")
+
+    st.markdown(" ")
+    
+    # 2. Row of Plotly Visualizations (Nutritional Breakdown vs. Cohort Development Age Tiers)
+    g_col1, g_col2 = st.columns(2)
+    
+    with g_col1:
+        st.write("**Nutritional Status Distribution (WHO Weight-for-Age Standards)**")
+        status_data = child_analytics['nutritional_status']
+        if any(status_data.values()):
+            df_status = pd.DataFrame(list(status_data.items()), columns=['Status', 'Count'])
+            fig_status = px.pie(df_status, values='Count', names='Status',
+                                color='Status',
+                                color_discrete_map={'Normal': '#2ecc71', 'Malnourished': '#e74c3c'},
+                                hole=0.4)
+            fig_status.update_layout(margin=dict(l=20, r=20, t=30, b=20))
+            st.plotly_chart(fig_status, use_container_width=True)
+        else:
+            st.info("No nutritional assessment records or Z-score indicators populated for this area yet.")
+            
+    with g_col2:
+        st.write("**Pediatric Cohort Categorization by Functional Age Tiers**")
+        age_tier_data = child_analytics['age_brackets']
+        if any(age_tier_data.values()):
+            df_tiers = pd.DataFrame(list(age_tier_data.items()), columns=['Age Category', 'Registered Count'])
+            fig_tiers = px.bar(df_tiers, x='Age Category', y='Registered Count',
+                               color='Age Category',
+                               color_discrete_sequence=px.colors.sequential.Tealgrn,
+                               text_auto=True)
+            fig_tiers.update_layout(showlegend=False, margin=dict(l=20, r=20, t=30, b=20))
+            st.plotly_chart(fig_tiers, use_container_width=True)
+        else:
+            st.info("No registered pediatric demographics match the active tracking matrices.")
+
+    # 3. Time Series Data Logging Performance Segment
+    st.markdown("---")
+    st.write("📊 **Anthropometric Measurement Activity Performance Log**")
+    st.info(f"System has processed and verified a total of **{child_analytics['raw_records_count']}** individual longitudinal weight/height delta logs for Anganwadi Chiklod across active assessment windows.")
     # Nutritional Status Pie Chart
     if child_analytics['nutritional_status']:
         st.write("**Nutritional Status Distribution**")
