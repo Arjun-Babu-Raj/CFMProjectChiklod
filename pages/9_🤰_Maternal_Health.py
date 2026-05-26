@@ -578,7 +578,7 @@ with tab4:
                     "exclusive_breastfeeding": exclusive_bf,
                     "hbnc_visits_done": hbnc_visits
                 },
-                "remarks": remarks if remarks else None
+                "remarks": remarks or None
             }
 
             mch_record = {
