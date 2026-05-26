@@ -43,6 +43,16 @@ def calculate_gestational_age(lmp_date, visit_date):
     return None
 
 
+def render_investigation_done_result(test_name: str, key_prefix: str) -> tuple[str, str | None]:
+    """Render investigation done/result fields for MCH proforma."""
+    done_status = st.radio(f"{test_name} Done", ["Yes", "No"], horizontal=True, key=f"{key_prefix}_done")
+    test_result = None
+    if done_status == "Yes":
+        test_result = st.radio(f"{test_name} Result", ["Positive", "Negative"], horizontal=True,
+                               key=f"{key_prefix}_result")
+    return done_status, test_result
+
+
 # Mother Selection
 st.subheader("Select Mother")
 
@@ -430,23 +440,13 @@ with tab4:
                 urine_albumin_inv = st.radio("Urine Albumin", ["Done", "Not Done"], horizontal=True)
                 urine_sugar_inv = st.radio("Urine Sugar", ["Done", "Not Done"], horizontal=True)
                 blood_group_inv = st.radio("Blood Group", ["Done", "Not Done"], horizontal=True)
-                hiv_done = st.radio("HIV Investigation Done", ["Yes", "No"], horizontal=True)
-                hiv_result = st.radio("HIV Result", ["Positive", "Negative"], horizontal=True, disabled=(hiv_done == "No"))
-                if hiv_done == "No":
-                    hiv_result = None
+                hiv_done, hiv_result = render_investigation_done_result("HIV Test", "mch_hiv")
                 syphilis_inv = st.radio("Syphilis Test", ["Done", "Not Done"], horizontal=True)
             with col2:
                 usg_inv = st.radio("USG (Ultrasound)", ["Done", "Not Done"], horizontal=True)
                 gdm_inv = st.radio("GDM Screening", ["Done", "Not Done"], horizontal=True)
-                hbsag_done = st.radio("HBsAg Investigation Done", ["Yes", "No"], horizontal=True)
-                hbsag_result = st.radio("HBsAg Result", ["Positive", "Negative"], horizontal=True,
-                                        disabled=(hbsag_done == "No"))
-                if hbsag_done == "No":
-                    hbsag_result = None
-                hcv_done = st.radio("HCV Investigation Done", ["Yes", "No"], horizontal=True)
-                hcv_result = st.radio("HCV Result", ["Positive", "Negative"], horizontal=True, disabled=(hcv_done == "No"))
-                if hcv_done == "No":
-                    hcv_result = None
+                hbsag_done, hbsag_result = render_investigation_done_result("HBsAg", "mch_hbsag")
+                hcv_done, hcv_result = render_investigation_done_result("HCV", "mch_hcv")
                 tsh_inv = st.radio("TSH", ["Done", "Not Done"], horizontal=True)
                 blood_sugar_inv = st.radio("Blood Sugar", ["Done", "Not Done"], horizontal=True)
 
