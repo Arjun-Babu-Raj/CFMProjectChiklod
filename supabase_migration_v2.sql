@@ -31,13 +31,16 @@ ALTER TABLE growth_monitoring
     ADD COLUMN IF NOT EXISTS assessment_data JSONB;
 
 -- ============================================================
--- 3. maternal_health: add BP columns and JSON proforma column
+-- 3. maternal_health: add BP columns, remarks, and JSON proforma column
 -- ============================================================
 ALTER TABLE maternal_health
     ADD COLUMN IF NOT EXISTS bp_systolic INTEGER;
 
 ALTER TABLE maternal_health
     ADD COLUMN IF NOT EXISTS bp_diastolic INTEGER;
+
+ALTER TABLE maternal_health
+    ADD COLUMN IF NOT EXISTS remarks TEXT;
 
 ALTER TABLE maternal_health
     ADD COLUMN IF NOT EXISTS assessment_data JSONB;

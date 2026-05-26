@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS maternal_health (
     delivery_outcome TEXT,
     bp_systolic INTEGER,
     bp_diastolic INTEGER,
+    remarks TEXT,
     assessment_data JSONB
 );
 

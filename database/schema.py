@@ -120,6 +120,7 @@ def init_database() -> None:
         calcium_iron_status TEXT,
         danger_signs TEXT,
         delivery_outcome TEXT,
+        remarks TEXT,
         assessment_data JSONB
     );
     

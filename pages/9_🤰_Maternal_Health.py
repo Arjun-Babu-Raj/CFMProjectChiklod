@@ -587,6 +587,7 @@ with tab4:
                 'visit_date': date.today().strftime('%Y-%m-%d'),
                 'lmp_date': lmp_mch.strftime('%Y-%m-%d') if lmp_mch else None,
                 'edd_date': edd_mch.strftime('%Y-%m-%d') if edd_mch else None,
+                'remarks': remarks or None,
                 'assessment_data': mch_assessment_data
             }
 
