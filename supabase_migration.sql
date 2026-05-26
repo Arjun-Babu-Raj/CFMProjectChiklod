@@ -14,7 +14,10 @@ CREATE TABLE IF NOT EXISTS residents (
     registration_date TEXT,
     registered_by TEXT,
     samagra_id TEXT,
-    aadhar_no TEXT
+    aadhar_no TEXT,
+    father_name TEXT,
+    mother_name TEXT,
+    date_of_birth TEXT
 );
 
 -- Create visits table
