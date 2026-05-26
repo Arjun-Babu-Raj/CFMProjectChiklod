@@ -761,7 +761,7 @@ class DatabaseManager:
     
     # ==================== NEW MODULE ANALYTICS ====================
     
- def get_child_health_analytics(self) -> Dict:
+    def get_child_health_analytics(self) -> Dict:
         """
         Get comprehensive analytics data for child health up to 10 years.
         
