@@ -45,11 +45,20 @@ def calculate_gestational_age(lmp_date, visit_date):
 
 def render_investigation_done_result(test_name: str, key_prefix: str) -> tuple[str, str | None]:
     """Render investigation done/result fields for MCH proforma."""
-    done_status = st.radio(f"{test_name} Done", ["Yes", "No"], horizontal=True, key=f"{key_prefix}_done")
+    done_status = st.radio(
+        f"{test_name} Done",
+        ["Not Done", "Done"],
+        horizontal=True,
+        key=f"{key_prefix}_done"
+    )
     test_result = None
-    if done_status == "Yes":
-        test_result = st.radio(f"{test_name} Result", ["Positive", "Negative"], horizontal=True,
-                               key=f"{key_prefix}_result")
+    if done_status == "Done":
+        test_result = st.radio(
+            f"{test_name} Result",
+            ["Positive", "Negative"],
+            horizontal=True,
+            key=f"{key_prefix}_result"
+        )
     return done_status, test_result
 
 
@@ -494,6 +503,8 @@ with tab4:
             with col2:
                 hbnc_visits = st.radio("HBNC Visits Done", ["Yes", "No"], horizontal=True)
 
+        remarks = st.text_area("Remarks", placeholder="Add any additional remarks")
+
         submitted_mch = st.form_submit_button("💾 Save MCH Proforma", use_container_width=True)
 
         if submitted_mch:
@@ -566,7 +577,8 @@ with tab4:
                     "early_bf_initiation": early_bf_init,
                     "exclusive_breastfeeding": exclusive_bf,
                     "hbnc_visits_done": hbnc_visits
-                }
+                },
+                "remarks": remarks if remarks else None
             }
 
             mch_record = {
